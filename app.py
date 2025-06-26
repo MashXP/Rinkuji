@@ -14,6 +14,15 @@ def index():
     """
     return render_template('index.html')
 
+@app.route('/rinku')
+def rinku():
+    """
+    Serves the Rinku 'game' page.
+    Takes a 'word' parameter to display.
+    """
+    word = request.args.get('word', '単語') # Default word if none is provided
+    return render_template('rinku.html', word=word)
+
 @app.route('/search_words')
 def search_words():
     """

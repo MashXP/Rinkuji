@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rinku - {{ word }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="rinku-body">
+    <div id="rinkuViewport" class="rinku-viewport">
+        <div id="rinkuCanvas" class="rinku-canvas">
+            <div id="rinkuWord" class="rinku-word" data-word="{{ word }}">
+                <!-- Kanji will be populated by JavaScript -->
+            </div>
+        </div>
+        <div class="zoom-controls">
+            <button id="zoomOutBtn" class="zoom-btn" title="Zoom Out">-</button>
+            <span id="zoomMeter" class="zoom-meter">100%</span>
+            <button id="zoomInBtn" class="zoom-btn" title="Zoom In">+</button>
+            <button id="resetViewBtn" class="zoom-btn" title="Reset View">⟲</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='rinku.js') }}" defer></script>
+</body>
+</html>

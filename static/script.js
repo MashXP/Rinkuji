@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     suggestionsContainer.id = 'suggestionsContainer';
     searchInput.parentNode.insertBefore(suggestionsContainer, searchInput.nextSibling);
 
+    // Rinku Start elements
+    const rinkuStartContainer = document.getElementById('rinkuStartContainer');
+    const rinkuStartButton = document.getElementById('rinkuStartButton');
+    let selectedWord = null;
+
     let debounceTimer;
 
     const fetchResults = async (queryOverride) => {
@@ -39,11 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const displayResults = (results) => {
         resultsContainer.innerHTML = ''; // Clear previous results
+        rinkuStartContainer.style.display = 'none'; // Hide Rinku button on new search
+        selectedWord = null;
 
         if (results && results.length > 0) {
             results.forEach(item => {
                 const resultItem = document.createElement('div');
                 resultItem.classList.add('result-item');
+                resultItem.dataset.word = item.slug; // Store word in data attribute
+
+                // Add click listener for selection
+                resultItem.addEventListener('click', () => {
+                    // Clear previous selection
+                    const currentlySelected = resultsContainer.querySelector('.result-item.selected');
+                    if (currentlySelected) {
+                        currentlySelected.classList.remove('selected');
+                    }
+                    // Select new item
+                    resultItem.classList.add('selected');
+                    selectedWord = resultItem.dataset.word;
+                    rinkuStartContainer.style.display = 'block';
+                });
 
                 // Display the main word/kanji
                 const word = item.slug;
@@ -140,6 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
     searchForm.addEventListener('submit', (event) => {
         event.preventDefault(); // Prevent page reload on form submission
         fetchResults();
+    });
+
+    rinkuStartButton.addEventListener('click', () => {
+        if (selectedWord) {
+            window.location.href = `/rinku?word=${encodeURIComponent(selectedWord)}`;
+        }
     });
 
     searchInput.addEventListener('input', () => {
