@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanese Dictionary Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="container">
+        <h1>Japanese Dictionary Search</h1>
+        <form class="search-bar" id="searchForm" role="search">
+            <label for="searchInput" class="visually-hidden">Search for a Japanese or English word</label>
+            <input type="text" id="searchInput" placeholder="Enter Kanji, Kana, or English word...">
+            <button type="submit" id="searchButton">Search</button>
+        </form>
+        <div id="resultsContainer" class="results-container">
+            <!-- Search results will be displayed here -->
+            <p class="no-results-message">Start by typing a word or Kanji in the search bar above!</p>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</body>
+</html>
