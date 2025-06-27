@@ -7,8 +7,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="rinku-body">
+    <button id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Kanji List">☰</button>
     <div id="rinkuViewport" class="rinku-viewport">
         <div id="rinkuCanvas" class="rinku-canvas">
+            <!-- SVG layer for drawing lines and circles -->
+            <svg id="rinkuSvgLayer" class="rinku-svg-layer"></svg>
+            <!-- Container for all the expanded nodes -->
+            <div id="rinkuNodesContainer"></div>
+
             <div id="rinkuWord" class="rinku-word" data-word="{{ word }}">
                 <!-- Kanji will be populated by JavaScript -->
             </div>
@@ -18,6 +24,13 @@
             <span id="zoomMeter" class="zoom-meter">100%</span>
             <button id="zoomInBtn" class="zoom-btn" title="Zoom In">+</button>
             <button id="resetViewBtn" class="zoom-btn" title="Reset View">⟲</button>
+        </div>
+    </div>
+    <div id="parentKanjiSidebar" class="parent-kanji-sidebar">
+        <h2 class="sidebar-title">History</h2>
+        <input type="text" id="parentKanjiSearch" placeholder="Search">
+        <div id="parentKanjiList" class="parent-kanji-list">
+            <!-- Kanji list items will be populated here -->
         </div>
     </div>
     <script src="{{ url_for('static', filename='rinku.js') }}" defer></script>

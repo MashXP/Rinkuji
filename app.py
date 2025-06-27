@@ -43,5 +43,26 @@ def search_words():
         print(f"Error fetching from Jisho API: {e}")
         return jsonify({"error": "Failed to fetch data from the external API."}), 502
 
+@app.route('/search_by_kanji')
+def search_by_kanji():
+    """
+    An API endpoint that finds words containing a specific kanji.
+    It takes a 'kanji' parameter from the request URL.
+    """
+    kanji = request.args.get('kanji', '')
+    if not kanji or len(kanji) != 1:
+        return jsonify({"error": "A single 'kanji' character parameter is required."}), 400
+
+    # The Jisho API is smart enough to find words containing a kanji by just searching for the kanji itself.
+    api_url = f"{JISHO_API_URL}?keyword={kanji}"
+
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching from Jisho API: {e}")
+        return jsonify({"error": "Failed to fetch data from the external API."}), 502
+
 if __name__ == '__main__':
     app.run(debug=True)
