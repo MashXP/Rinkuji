@@ -9,6 +9,7 @@ import { LineCreator } from './LineCreator.js';
 import { NodeMovementManager } from './NodeMovementManager.js';
 import { NodeDuplicator } from './NodeDuplicator.js';
 import { NodeCollapseExpandManager } from './NodeCollapseExpandManager.js';
+import { MeaningDisplayManager } from './MeaningDisplayManager.js';
 
 // Class to manage the Rinku Graph functionality (expansion, nodes, sidebar)
 export class RinkuGraph extends CanvasComponent {
@@ -69,6 +70,10 @@ export class RinkuGraph extends CanvasComponent {
             this.nodeFilterManager.filterNodeContent.bind(this.nodeFilterManager)
         );
 
+        // Initialize Meaning Display Manager
+        const meaningBar = document.getElementById('meaningBar');
+        this.meaningDisplayManager = new MeaningDisplayManager(meaningBar);
+
         // Initialize LineCreator
         this.lineCreator = new LineCreator(this.svgLayer, this.panZoom);
 
@@ -80,7 +85,8 @@ export class RinkuGraph extends CanvasComponent {
             this.contextMenuHandler,
             this.nodeDragHandler,
             this.panZoom,
-            this._addKanjiEventListeners.bind(this)
+            this._addKanjiEventListeners.bind(this),
+            this.handleNodeClick.bind(this) // Pass callback for node clicks
         );
 
         // Initialize NodeDuplicator
@@ -254,6 +260,19 @@ export class RinkuGraph extends CanvasComponent {
     }
 
     /**
+     * Handles a click on the node itself (not a kanji span).
+     * @param {HTMLElement} node - The node that was clicked.
+     * @param {MouseEvent} e - The click event.
+     */
+    handleNodeClick(node, e) {
+        // If the click target was a Kanji span, it's a kanji click, which is handled separately. Do nothing.
+        // Clicks on non-kanji spans will fall through and show the node's meaning.
+        if (e.target.tagName === 'SPAN' && this.kanjiRegex.test(e.target.textContent)) {
+            return;
+        }
+        this.meaningDisplayManager.showMeaning(node.dataset.wordSlug || this.word);
+    }
+    /**
      * Clears the currently active selection circle from the SVG layer and resets its state.
      */
     _clearSelectionCircle() {
@@ -335,11 +354,27 @@ export class RinkuGraph extends CanvasComponent {
             this.contextMenuHandler.handleContextMenu(e);
         });
 
+        // Add click listener to the root word for showing its meaning
+        this.wordContainer.addEventListener('click', (e) => {
+            // The root node isn't draggable by default, but this check ensures
+            // consistency if that functionality is added later.
+            if (!this.nodeDragHandler.hasDragOccurred()) {
+                this.handleNodeClick(this.wordContainer, e);
+            }
+        });
+
         // Mousemove for dragging nodes AND panning
         this.viewport.addEventListener('mousemove', (e) => {
             const dragHandled = this.nodeDragHandler.handleMouseMove(e);
             if (!dragHandled) {
                 this.panZoom.handlePanMouseMove(e);
+            }
+        });
+
+        // Add listener to viewport to hide meaning bar on background click
+        this.viewport.addEventListener('mousedown', (e) => {
+            if (e.target === this.viewport) {
+                this.meaningDisplayManager.hideMeaning();
             }
         });
 

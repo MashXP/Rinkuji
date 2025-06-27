@@ -264,7 +264,7 @@ body.rinku-body {
     border-radius: 4px;
     margin-bottom: 2px;
     transition: background-color 0.2s ease, color 0.2s ease;
-    font-size: 2em;
+    font-size: 1.5em; /* Made text a bit smaller */
     text-align: center;
 }
 
@@ -426,11 +426,11 @@ body.rinku-body {
 .expanded-node {
     position: absolute;
     background-color: rgba(236, 240, 241, 0.1);
-    border: 5px solid rgba(189, 195, 199, 0.5);
+    border: 3px solid rgba(189, 195, 199, 0.5);
     border-radius: 8px;
-    padding: 5px 10px;
+    padding: 10px 10px;
     color: #ecf0f1;
-    font-size: 2.5rem;
+    font-size: 2rem;
     white-space: nowrap;
     -webkit-user-select: none; /* For Safari */
     user-select: none;
@@ -620,4 +620,84 @@ body.rinku-body {
 #sidebarContextMenu {
     position: fixed;
     z-index: 1001;
+}
+
+/* Meaning Bar Styles */
+.meaning-bar {
+    position: fixed;
+    bottom: 10px; /* Added bottom margin */
+    left: 50%; /* Prepare for centering */
+    max-width: 700px; /* Limited width as requested */
+    width: 90vw; /* Responsive for smaller screens */
+    border-radius: 8px; /* Added for a softer look */
+    min-height: 60px;
+    max-height: 120px;
+    background-color: rgba(44, 62, 80, 0.9); /* Dark, semi-transparent background */
+    color: #ecf0f1;
+    padding: 15px 30px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1002; /* Above sidebar context menu */
+    transform: translateX(-50%) translateY(100%); /* Center and hide below screen */
+    transition: transform 0.3s ease-in-out;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center; /* Vertically center the content */
+    justify-content: center;
+}
+
+.meaning-bar.visible {
+    transform: translateX(-50%) translateY(0); /* Slide in to centered position */
+}
+
+.meaning-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    height: 100%;
+}
+
+.meaning-word {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #3498db;
+    flex-shrink: 0;
+    max-width: 150px;
+    min-width: 40px;
+    word-break: break-word;
+}
+
+.meaning-reading {
+    color: #bdc3c7;
+    font-size: 0.75em;
+    width: 85px;
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+
+.meaning-definition {
+    font-style: italic;
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 90px;
+    font-size: 0.75em;
+    padding-right: 10px;
+    line-height: 1.4;
+}
+
+.meaning-definition::-webkit-scrollbar {
+    width: 8px;
+}
+
+.meaning-definition::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.meaning-definition::-webkit-scrollbar-thumb {
+    background-color: rgba(127, 140, 141, 0.5);
+    border-radius: 4px;
+}
+
+.meaning-definition::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(149, 165, 166, 0.8);
 }

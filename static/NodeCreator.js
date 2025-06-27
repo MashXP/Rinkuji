@@ -7,8 +7,9 @@ export class NodeCreator {
      * @param {NodeDragHandler} nodeDragHandler - Instance of NodeDragHandler for making nodes draggable.
      * @param {PanZoom} panZoom - Instance of PanZoom for coordinate calculations.
      * @param {function(HTMLElement): void} addKanjiEventListeners - Callback to add event listeners to Kanji spans within nodes.
+     * @param {function(HTMLElement, MouseEvent): void} onNodeClickCallback - Callback for when a node itself is clicked.
      */
-    constructor(nodesContainer, kanjiRegex, kanjiSidebar, contextMenuHandler, nodeDragHandler, panZoom, addKanjiEventListeners) {
+    constructor(nodesContainer, kanjiRegex, kanjiSidebar, contextMenuHandler, nodeDragHandler, panZoom, addKanjiEventListeners, onNodeClickCallback) {
         this.nodesContainer = nodesContainer;
         this.kanjiRegex = kanjiRegex;
         this.kanjiSidebar = kanjiSidebar;
@@ -16,6 +17,7 @@ export class NodeCreator {
         this.nodeDragHandler = nodeDragHandler;
         this.panZoom = panZoom;
         this.addKanjiEventListeners = addKanjiEventListeners;
+        this.onNodeClickCallback = onNodeClickCallback;
     }
 
     /**
@@ -38,6 +40,14 @@ export class NodeCreator {
             this.contextMenuHandler.handleContextMenu(e);
         });
         this.nodeDragHandler.addDragHandlersToNode(node);
+
+        // Add click listener for showing definitions
+        node.addEventListener('click', (e) => {
+            // Only fire if a drag did not occur
+            if (!this.nodeDragHandler.hasDragOccurred()) {
+                this.onNodeClickCallback(node, e);
+            }
+        });
 
         wordString.split('').forEach(char => {
             const charSpan = document.createElement('span');
