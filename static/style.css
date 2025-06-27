@@ -667,6 +667,17 @@ body.rinku-body {
     word-break: break-word;
 }
 
+/* Style for the Jisho link within the meaning bar */
+.jisho-link {
+    text-decoration: none; /* Remove default underline */
+    cursor: pointer; /* Indicate clickability */
+}
+
+.jisho-link:hover {
+    text-decoration: underline; /* Add underline on hover */
+    color: #5dade2; /* Slightly lighter blue on hover */
+}
+
 .meaning-reading {
     color: #bdc3c7;
     font-size: 0.75em;

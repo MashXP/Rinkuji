@@ -45,7 +45,7 @@ export class MeaningDisplayManager {
 
         this.meaningBar.innerHTML = `
             <div class="meaning-content">
-                <span class="meaning-word">${word}</span>
+                <a href="https://jisho.org/search/${encodeURIComponent(word)}" target="_blank" rel="noopener noreferrer" class="meaning-word jisho-link">${word}</a>
                 <span class="meaning-reading">${readings}</span>
                 <span class="meaning-definition">${meanings}</span>
             </div>
