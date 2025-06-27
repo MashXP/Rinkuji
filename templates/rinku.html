@@ -33,6 +33,20 @@
             <!-- Kanji list items will be populated here -->
         </div>
     </div>
-    <script src="{{ url_for('static', filename='rinku.js') }}" defer></script>
+    <script type="module" src="{{ url_for('static', filename='main.js') }}" defer></script>
+
+    <!-- Context Menu HTML -->
+    <div id="nodeContextMenu" class="context-menu">
+        <div class="context-menu-item" data-action="collapse">Collapse</div>
+        <div class="context-menu-item" data-action="expand" style="display: none;">Expand</div> <!-- Initially hidden -->
+        <div class="context-menu-item has-submenu">
+            Filter Content
+            <div class="context-menu-submenu">
+                <div class="context-menu-item" data-action="filter-all">Show All</div>
+                <div class="context-menu-item" data-action="filter-kanji">Only Kanji</div>
+                <div class="context-menu-item" data-action="filter-start-kanji">Start from Clicked Kanji</div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
