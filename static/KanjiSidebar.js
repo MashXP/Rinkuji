@@ -70,14 +70,20 @@ export class KanjiSidebar {
             listItem.dataset.kanji = kanjiChar; // Store kanji char for easy lookup
 
             // Dim the entry if its corresponding node is collapsed OR hidden
-            if (targetNode && (targetNode.dataset.collapsed === 'true' || targetNode.dataset.hidden === 'true')) {
+            if (targetNode && (targetNode.dataset.hidden === 'true' || targetNode.classList.contains('node-hidden-by-filter'))) {
                 listItem.classList.add('dimmed');
             }
 
-            listItem.addEventListener('click', () => {
+            listItem.addEventListener('click', (e) => {
                 if (targetNode) {
                     // Find the specific kanji span within the targetNode to focus
                     let foundKanjiSpan = null;
+
+                    // Prevent navigation if the item is dimmed (node is hidden, collapsed, or filtered)
+                    if (listItem.classList.contains('dimmed')) {
+                        e.stopPropagation();
+                        return;
+                    }
                     // Iterate over children to find the correct kanji span
                     Array.from(targetNode.children).forEach(span => {
                         if (span.textContent === kanjiChar && (span.classList.contains('active-source-kanji') || span.classList.contains('expanded-parent-kanji'))) {
@@ -105,8 +111,8 @@ export class KanjiSidebar {
         listItems.forEach(item => {
             const kanjiChar = item.dataset.kanji;
             const node = this.parentKanjiMap.get(kanjiChar);
-            if (node) {
-                const isDimmed = node.dataset.collapsed === 'true' || node.dataset.hidden === 'true';
+            if (node) { // Check if the node is hidden or hidden by filter
+                const isDimmed = node.dataset.hidden === 'true' || node.classList.contains('node-hidden-by-filter');
                 item.classList.toggle('dimmed', isDimmed);
             }
         });
@@ -143,7 +149,7 @@ export class KanjiSidebar {
         this.sidebarContextMenu.id = 'sidebarContextMenu';
         this.sidebarContextMenu.classList.add('context-menu'); // Reuse existing context menu styles
         this.sidebarContextMenu.innerHTML = `
-            <div class="context-menu-item" data-action="show-node">Show Node</div>
+            <div class="context-menu-item" data-action="show-node">Show / Reset</div>
             <div class="context-menu-item" data-action="hide-node">Hide Node</div>
         `;
         document.body.appendChild(this.sidebarContextMenu);
@@ -170,7 +176,14 @@ export class KanjiSidebar {
 
         switch (action) {
             case 'show-node':
+                // Show, expand, and reset filters on the node
                 this.nodeCollapseExpandManager.showNode(this.activeSidebarNode);
+                this.nodeCollapseExpandManager.expandNode(this.activeSidebarNode);
+                // Reset and reapply filters to ensure all content is visible
+                this.activeSidebarNode.dataset.filterType = 'all'; // Reset filter type
+                this.activeSidebarNode.dataset.filterClickedKanji = ''; // Clear clicked kanji
+                this.nodeCollapseExpandManager.nodeFilterManager.applyChildFilterRecursively(this.activeSidebarNode); // Reapply filter
+                this.recalculateDimmingState(); // Update sidebar item's dimming state
                 break;
             case 'hide-node':
                 this.nodeCollapseExpandManager.hideNode(this.activeSidebarNode);

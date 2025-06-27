@@ -32,7 +32,8 @@ export class NodeCollapseExpandManager {
             this.clearSelectionCircleCallback();
         }
 
-        this.kanjiSidebar.recalculateDimmingState();
+        // Notify the sidebar to update the dimming state of its items
+        if (this.kanjiSidebar) this.kanjiSidebar.recalculateDimmingState();
         console.log(`Node collapsed: ${node.dataset.wordSlug}`);
     }
 
@@ -46,7 +47,9 @@ export class NodeCollapseExpandManager {
         node.dataset.collapsed = 'false';
         node.classList.remove('collapsed-parent');
 
-        this.kanjiSidebar.recalculateDimmingState();
+        // Notify the sidebar to update the dimming state of its items
+        if (this.kanjiSidebar) this.kanjiSidebar.recalculateDimmingState();
+
         this.nodeFilterManager.applyChildFilterRecursively(node);
         console.log(`Node expanded: ${node.dataset.wordSlug}`);
     }
