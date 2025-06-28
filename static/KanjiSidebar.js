@@ -1,16 +1,14 @@
 export class KanjiSidebar {
     /**
      * @param {HTMLElement} sidebarElement - The main sidebar DOM element.
-     * @param {HTMLElement} toggleButton - The button to toggle the sidebar.
      * @param {HTMLInputElement} searchInput - The input field for searching Kanji.
      * @param {HTMLElement} kanjiListContainer - The container for the list of Kanji entries.
      * @param {function(HTMLElement): void} focusKanjiCallback - Callback to focus on a Kanji in the graph.
      * @param {function(HTMLElement): void} centerViewCallback - Callback to center the view on a node.
      * @param {NodeCollapseExpandManager} nodeCollapseExpandManager - Instance of NodeCollapseExpandManager.
      */
-    constructor(sidebarElement, toggleButton, searchInput, kanjiListContainer, focusKanjiCallback, centerViewCallback, nodeCollapseExpandManager) {
+    constructor(sidebarElement, searchInput, kanjiListContainer, focusKanjiCallback, centerViewCallback, nodeCollapseExpandManager) {
         this.sidebarElement = sidebarElement;
-        this.toggleButton = toggleButton;
         this.searchInput = searchInput;
         this.kanjiListContainer = kanjiListContainer;
         this.focusKanjiCallback = focusKanjiCallback;
@@ -22,7 +20,6 @@ export class KanjiSidebar {
 
         this._setupEventListeners();
         this._createContextMenu(); // Setup the sidebar's context menu
-        this._updateToggleButton(); // Set initial state of the button
     }
 
     /**
@@ -118,31 +115,6 @@ export class KanjiSidebar {
         });
     }
 
-    /**
-     * Toggles the visibility of the sidebar.
-     */
-    _toggleSidebar() {
-        // Toggle the 'visible' class on the sidebar container
-        this.sidebarElement.classList.toggle('visible');
-        // Toggle the 'active' class on the toggle button itself
-        this.toggleButton.classList.toggle('active');
-        this._updateToggleButton();
-    }
-
-    /**
-     * Updates the toggle button's content based on the sidebar state.
-     */
-    _updateToggleButton() {
-        // Check the 'active' class on the button, as per the original SidebarToggleHandler logic
-        if (this.toggleButton.classList.contains('active')) {
-            this.toggleButton.textContent = '✕'; // Icon for open state
-            this.toggleButton.title = 'Close Kanji List';
-        } else {
-            this.toggleButton.textContent = '☰'; // Icon for closed state
-            this.toggleButton.title = 'Toggle Kanji List';
-        }
-    }
-
     // --- Sidebar Context Menu Logic ---
     _createContextMenu() {
         this.sidebarContextMenu = document.createElement('div');
@@ -201,8 +173,6 @@ export class KanjiSidebar {
 
     _setupEventListeners() {
         this.searchInput.addEventListener('input', this._updateList.bind(this));
-        this.toggleButton.addEventListener('click', this._toggleSidebar.bind(this));
-        // Hide context menu if clicked anywhere else
         document.addEventListener('click', (e) => {
             if (this.sidebarContextMenu && !this.sidebarContextMenu.contains(e.target)) {
                 this._hideContextMenu();

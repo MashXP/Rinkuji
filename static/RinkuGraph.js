@@ -13,7 +13,7 @@ import { MeaningDisplayManager } from './MeaningDisplayManager.js';
 
 // Class to manage the Rinku Graph functionality (expansion, nodes, sidebar)
 export class RinkuGraph extends CanvasComponent {
-    constructor(viewport, canvas, wordContainer, svgLayer, nodesContainer, parentKanjiSidebar, sidebarToggleBtn, parentKanjiSearchInput, parentKanjiListContainer, panZoom) {
+    constructor(viewport, canvas, wordContainer, svgLayer, nodesContainer, parentKanjiSidebar, parentKanjiSearchInput, parentKanjiListContainer, panZoom) {
         super(viewport, canvas, panZoom); // Initialize properties from CanvasComponent
 
         this.wordContainer = wordContainer;
@@ -51,7 +51,6 @@ export class RinkuGraph extends CanvasComponent {
         // Initialize KanjiSidebar, passing the collapse/expand manager for its context menu actions.
         this.kanjiSidebar = new KanjiSidebar(
             parentKanjiSidebar,
-            sidebarToggleBtn,
             parentKanjiSearchInput,
             parentKanjiListContainer,
             this._focusKanji.bind(this), // Pass RinkuGraph's focus method

@@ -1,6 +1,7 @@
 import { PanZoom } from './PanZoom.js';
 import { RinkuGraph } from './RinkuGraph.js';
-import { UIAutoHideManager } from './UIAutoHideManager.js';
+import { OptionsMenu } from './OptionsMenu.js';
+import { UITogglingManager } from './UITogglingManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const viewport = document.getElementById('rinkuViewport');
@@ -27,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const rinkuFooter = document.querySelector('.footer-rinku');
     const hideUiBtn = document.getElementById('hideUiBtn');
 
+    // Options Modal elements
+    const optionsModal = document.getElementById('optionsModal');
+    const optionsBtn = document.getElementById('optionsBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
     // Instantiate PanZoom
     const panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
 
@@ -38,24 +44,51 @@ document.addEventListener('DOMContentLoaded', () => {
         svgLayer,
         nodesContainer,
         parentKanjiSidebar,
-        sidebarToggleBtn,
         parentKanjiSearchInput,
         parentKanjiListContainer,
         panZoom
     );
 
-    // Setup auto-hiding for designated UI elements (Footer is now handled manually)
-    const autoHideElements = [sidebarToggleBtn, zoomControls];
-    const uiAutoHideManager = new UIAutoHideManager(autoHideElements);
-    uiAutoHideManager.init();
+    // --- UI Toggling Centralization ---
+    // Use the UITogglingManager's static helper to set up UI controls.
 
-    // Add click listener for the manual hide button to toggle the footer
+    // Setup for the "Hide/Show Controls" button
     if (hideUiBtn && rinkuFooter) {
-        hideUiBtn.addEventListener('click', () => {
-            const isHidden = rinkuFooter.classList.toggle('is-manually-hidden');
-            // Change the button icon and title based on the new state
-            hideUiBtn.innerHTML = isHidden ? '◀' : '▶';
-            hideUiBtn.title = isHidden ? 'Show Controls' : 'Hide Controls';
+        UITogglingManager.setupToggle({
+            button: hideUiBtn,
+            target: rinkuFooter,
+            toggleClass: 'is-manually-hidden',
+            onState: { // State when UI is hidden
+                html: '<i class="fas fa-caret-left"></i>',
+                title: 'Show Controls'
+            },
+            offState: { // State when UI is visible
+                html: '<i class="fas fa-caret-right"></i>',
+                title: 'Hide Controls'
+            }
         });
+    }
+
+    // Setup for the sidebar toggle button
+    if (sidebarToggleBtn && parentKanjiSidebar) {
+        UITogglingManager.setupToggle({
+            button: sidebarToggleBtn,
+            target: parentKanjiSidebar,
+            toggleClass: 'visible',
+            buttonToggleClass: 'active',
+            onState: { // State when sidebar is visible
+                html: '<i class="fas fa-times"></i>',
+                title: 'Close Kanji List'
+            },
+            offState: { // State when sidebar is hidden
+                html: '<i class="fas fa-bars"></i>',
+                title: 'Toggle Kanji List'
+            }
+        });
+    }
+
+    // Instantiate OptionsMenu
+    if (optionsModal && optionsBtn && modalCloseBtn) {
+        new OptionsMenu(optionsModal, optionsBtn, modalCloseBtn);
     }
 });

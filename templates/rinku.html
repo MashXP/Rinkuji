@@ -3,46 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rinku - {{ word }}</title>
+    <title>Rinku</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='rinku.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='rinku-ui.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="rinku-body">
-    <button id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Kanji List">☰</button>
+    <button id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle Kanji List"><i class="fas fa-bars"></i></button>
     <div id="rinkuViewport" class="rinku-viewport">
         <div id="rinkuCanvas" class="rinku-canvas">
-            <!-- SVG layer for drawing lines and circles -->
             <svg id="rinkuSvgLayer" class="rinku-svg-layer"></svg>
-            <!-- Container for all the expanded nodes -->
             <div id="rinkuNodesContainer"></div>
 
             <div id="rinkuWord" class="rinku-word" data-word="{{ word }}">
-                <!-- Kanji will be populated by JavaScript -->
-            </div>
+                </div>
         </div>
         <div class="zoom-controls">
-            <button id="zoomOutBtn" class="zoom-btn" title="Zoom Out">-</button>
+            <button id="zoomOutBtn" class="zoom-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
             <span id="zoomMeter" class="zoom-meter">100%</span>
-            <button id="zoomInBtn" class="zoom-btn" title="Zoom In">+</button>
-            <button id="resetViewBtn" class="zoom-btn" title="Reset View">⟲</button>
+            <button id="zoomInBtn" class="zoom-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
+            <button id="resetViewBtn" class="zoom-btn" title="Reset View"><i class="fas fa-sync-alt"></i></button>
         </div>
     </div>
     <div id="parentKanjiSidebar" class="parent-kanji-sidebar">
         <h2 class="sidebar-title">History</h2>
         <input type="text" id="parentKanjiSearch" placeholder="Search">
         <div id="parentKanjiList" class="parent-kanji-list">
-            <!-- Kanji list items will be populated here -->
-        </div>
+            </div>
     </div>
     <div id="meaningBar" class="meaning-bar"></div>
     <script type="module" src="{{ url_for('static', filename='main.js') }}" defer></script>
 
-    <!-- Context Menu HTML -->
+    <div id="optionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Options</h2>
+                <span id="modalCloseBtn" class="close-button" title="Close"><i class="fas fa-times"></i></span>
+            </div>
+            <div class="modal-body">
+                <p>Here are some placeholder options:</p>
+                <button>Toggle Dark/Light Mode</button>
+                <button>Another Option</button>
+            </div>
+        </div>
+    </div>
+
     <div id="nodeContextMenu" class="context-menu">
         <div class="context-menu-item" data-action="collapse">Collapse</div>
-        <div class="context-menu-item" data-action="expand" style="display: none;">Expand</div> <!-- Initially hidden -->
-        <div class="context-menu-item has-submenu">
+        <div class="context-menu-item" data-action="expand" style="display: none;">Expand</div> <div class="context-menu-item has-submenu">
             Filter Content
             <div class="context-menu-submenu">
                 <div class="context-menu-item" data-action="filter-all">Show All</div>
@@ -53,9 +62,11 @@
     </div>
 
     <footer class="footer footer-rinku">
-        <button id="hideUiBtn" class="hide-ui-btn" title="Hide UI Controls">▶</button>
+        <button id="hideUiBtn" class="hide-ui-btn" title="Hide UI Controls"><i class="fas fa-caret-right"></i></button>
+        <button id="optionsBtn" class="footer-btn" title="Options"><i class="fas fa-cog"></i></button>
         <a href="{{ url_for('about') }}">About</a>
         <a href="/">New Search</a>
     </footer>
+
 </body>
 </html>
