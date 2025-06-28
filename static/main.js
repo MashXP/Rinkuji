@@ -1,7 +1,6 @@
-// d:/Rinkuji/static/main.js
-
-import { PanZoom } from './PanZoom.js'; // Assuming PanZoom is also a module
-import { RinkuGraph } from './RinkuGraph.js'; // Import RinkuGraph as a module
+import { PanZoom } from './PanZoom.js';
+import { RinkuGraph } from './RinkuGraph.js';
+import { UIAutoHideManager } from './UIAutoHideManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const viewport = document.getElementById('rinkuViewport');
@@ -16,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomOutBtn = document.getElementById('zoomOutBtn');
     const resetViewBtn = document.getElementById('resetViewBtn');
     const zoomMeter = document.getElementById('zoomMeter');
+    const zoomControls = document.querySelector('.zoom-controls');
     // Sidebar elements
     const parentKanjiSidebar = document.getElementById('parentKanjiSidebar');
     const parentKanjiSearchInput = document.getElementById('parentKanjiSearch');
@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sidebar Toggle Button
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    // Footer
+    const rinkuFooter = document.querySelector('.footer-rinku');
+    const hideUiBtn = document.getElementById('hideUiBtn');
 
     // Instantiate PanZoom
     const panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
@@ -40,4 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
         parentKanjiListContainer,
         panZoom
     );
+
+    // Setup auto-hiding for designated UI elements (Footer is now handled manually)
+    const autoHideElements = [sidebarToggleBtn, zoomControls];
+    const uiAutoHideManager = new UIAutoHideManager(autoHideElements);
+    uiAutoHideManager.init();
+
+    // Add click listener for the manual hide button to toggle the footer
+    if (hideUiBtn && rinkuFooter) {
+        hideUiBtn.addEventListener('click', () => {
+            const isHidden = rinkuFooter.classList.toggle('is-manually-hidden');
+            // Change the button icon and title based on the new state
+            hideUiBtn.innerHTML = isHidden ? '◀' : '▶';
+            hideUiBtn.title = isHidden ? 'Show Controls' : 'Hide Controls';
+        });
+    }
 });

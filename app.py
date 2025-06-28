@@ -64,5 +64,9 @@ def search_by_kanji():
         print(f"Error fetching from Jisho API: {e}")
         return jsonify({"error": "Failed to fetch data from the external API."}), 502
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Rinkuji</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="about-page-body">
+    <a href="{{ url_for('index') }}" class="back-button" title="Back to Home">←</a>
+
+    <main class="container">
+        <h1>About Rinkuji</h1>
+
+        <section class="about-section">
+            <h2>What is Rinkuji?</h2>
+            <p>
+                Rinkuji (リンク字) is a web application designed to help you explore the intricate connections between Japanese words and the kanji they contain. By inputting a word, you can generate a dynamic, interactive graph that visually maps out the relationships between kanji, their components, and other related words.
+            </p>
+            <p>
+                Our goal is to provide a unique and intuitive learning tool for students of the Japanese language, making the process of understanding kanji and vocabulary more engaging and memorable.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>How to Use</h2>
+            <ol>
+                <li><strong>Search:</strong> Start by typing a Japanese word (in kanji or kana) or an English word into the search bar on the homepage.</li>
+                <li><strong>Select:</strong> Choose a result from the list to begin your exploration.</li>
+                <li><strong>Explore:</strong> Click the "Rinku Start!" button to generate the initial graph. You can click on individual kanji nodes to expand them and reveal more connections.</li>
+                <li><strong>Interact:</strong> Pan and zoom the canvas to navigate your graph. Right-click on nodes for more options, like filtering the content or collapsing branches.</li>
+            </ol>
+        </section>
+
+        <section class="about-section">
+            <h2>Data Source and Attribution</h2>
+            <p>
+                All dictionary and kanji data presented in Rinkuji is sourced directly from the <a href="https://jisho.org/" target="_blank" rel="noopener noreferrer">Jisho.org</a> API. Jisho.org is a powerful Japanese-English dictionary that aggregates data from several projects, including the <a href="http://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener noreferrer">JMdict</a>, <a href="http://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener noreferrer">Kanjidic2</a>, and <a href="https://tatoeba.org/" target="_blank" rel="noopener noreferrer">Tatoeba</a> projects. We are incredibly grateful to the Jisho.org team and the creators of these underlying data sources for making this information publicly available.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>Terms and Conditions</h2>
+            <p>
+                By using Rinkuji ("the Service"), you are agreeing to be bound by the following terms and conditions ("Terms of Service").
+            </p>
+            <p>
+                The Service is provided on an "as is" and "as available" basis. Rinkuji acts as a client for the Jisho.org API. We do not host or own the dictionary data. As such, we do not warrant the accuracy, completeness, or availability of the data returned by the API. The data is provided for educational and informational purposes only, and you should use it at your own discretion.
+            </p>
+            <p>
+                We are not responsible for any issues, downtime, or changes related to the Jisho.org API. You agree not to use this Service for any illegal or unauthorized purpose. You also agree not to reproduce, duplicate, copy, sell, or exploit any portion of the Rinkuji application's unique interface or functionality without express written permission from us.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>Privacy Policy</h2>
+            <p>
+                We do not collect any personally identifiable information from our users. Your search queries are processed to provide the service but are not stored or linked to you. We may use anonymous usage data to improve the application.
+            </p>
+        </section>
+
+    </main>
+</body>
+</html>
