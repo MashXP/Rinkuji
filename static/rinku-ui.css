@@ -357,16 +357,24 @@
     transform: translateX(calc(92%));
 }
 
-.footer-rinku a {
+.footer-rinku a,
+.footer-rinku #newSearchBtn {
     background-color: #ecf0f1;
     color: #2c3e50;
     font-weight: bold;
     font-size: 10px;
     padding: 8px 15px;
     border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
+    line-height: normal;
 }
 
-.footer-rinku a:hover {
+.footer-rinku a:hover,
+.footer-rinku #newSearchBtn:hover {
     background-color: #bdc3c7;
     color: #2c3e50;
 }
@@ -495,4 +503,51 @@
 
 .modal-body button:active {
     transform: translateY(0);
+}
+
+/* --- New Search Modal Form --- */
+.modal-search-form {
+    display: flex;
+    width: 100%;
+    border: 1px solid #55708a;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.modal-search-form input[type="text"] {
+    flex-grow: 1;
+    border: none;
+    padding: 12px 15px;
+    font-size: 1em;
+    outline: none;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+}
+
+.modal-search-form input[type="text"]::placeholder {
+    color: #bdc3c7;
+}
+
+.modal-search-form input[type="text"]:focus {
+    background-color: #34495e;
+}
+
+.modal-search-form button {
+    /* Override generic modal button styles */
+    width: auto;
+    margin: 0;
+    text-align: center;
+    border-radius: 0;
+    border: none;
+    background-color: #3498db;
+    color: white;
+    padding: 0 20px;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+.modal-search-form button:hover {
+    background-color: #2980b9;
+    transform: none; /* Override generic modal button hover */
 }

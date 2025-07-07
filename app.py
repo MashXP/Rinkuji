@@ -8,19 +8,12 @@ app = Flask(__name__)
 JISHO_API_URL = "https://jisho.org/api/v1/search/words"
 
 @app.route('/')
-def index():
+def index(): # The main page is now the Rinku visualization
     """
-    Serves the main HTML page of the application.
+    Serves the Rinku visualization page.
+    Takes an optional 'word' query parameter for the search.
     """
-    return render_template('index.html')
-
-@app.route('/rinku')
-def rinku():
-    """
-    Serves the Rinku 'game' page.
-    Takes a 'word' parameter to display.
-    """
-    word = request.args.get('word', '単語') # Default word if none is provided
+    word = request.args.get('word', '')
     return render_template('rinku.html', word=word)
 
 @app.route('/search_words')

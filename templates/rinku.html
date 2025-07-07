@@ -49,6 +49,21 @@
         </div>
     </div>
 
+    <div id="newSearchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Search</h2>
+                <span id="newSearchModalCloseBtn" class="close-button" title="Close"><i class="fas fa-times"></i></span>
+            </div>
+            <div class="modal-body">
+                <form id="newSearchForm" class="modal-search-form" action="/" method="get">
+                    <input type="text" id="newSearchInput" name="word" placeholder="Enter Kanji, Kana, or English word..." required autocomplete="off">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="nodeContextMenu" class="context-menu">
         <div class="context-menu-item" data-action="collapse">Collapse</div>
         <div class="context-menu-item" data-action="expand" style="display: none;">Expand</div> <div class="context-menu-item has-submenu">
@@ -65,7 +80,7 @@
         <button id="hideUiBtn" class="hide-ui-btn" title="Hide UI Controls"><i class="fas fa-caret-right"></i></button>
         <button id="optionsBtn" class="footer-btn" title="Options"><i class="fas fa-cog"></i></button>
         <a href="{{ url_for('about') }}">About</a>
-        <a href="/">New Search</a>
+        <button id="newSearchBtn">New Search</button>
     </footer>
 
 </body>

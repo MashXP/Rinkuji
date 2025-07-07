@@ -1,6 +1,7 @@
 import { PanZoom } from './PanZoom.js';
 import { RinkuGraph } from './RinkuGraph.js';
 import { OptionsMenu } from './OptionsMenu.js';
+import { NewSearchModal } from './NewSearchModal.js';
 import { UITogglingManager } from './UITogglingManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const optionsModal = document.getElementById('optionsModal');
     const optionsBtn = document.getElementById('optionsBtn');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    // New Search Modal elements
+    const newSearchModal = document.getElementById('newSearchModal');
+    const newSearchBtn = document.getElementById('newSearchBtn');
+    const newSearchModalCloseBtn = document.getElementById('newSearchModalCloseBtn');
+    const newSearchInput = document.getElementById('newSearchInput');
 
     // Instantiate PanZoom
     const panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
@@ -90,5 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Instantiate OptionsMenu
     if (optionsModal && optionsBtn && modalCloseBtn) {
         new OptionsMenu(optionsModal, optionsBtn, modalCloseBtn);
+    }
+
+    // Instantiate NewSearchModal
+    if (newSearchModal && newSearchBtn && newSearchModalCloseBtn && newSearchInput) {
+        new NewSearchModal(newSearchModal, newSearchBtn, newSearchModalCloseBtn, newSearchInput);
     }
 });
