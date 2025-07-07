@@ -152,10 +152,15 @@
 .footer {
     text-align: center;
     padding: 10px 0;
-    margin-top: 20px;
+    margin-top: auto;
+    padding-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
 }
 
-.footer a {
+.footer-link {
     display: inline-block;
     text-decoration: none;
     background-color: #e9ecef;
@@ -166,7 +171,28 @@
     transition: background-color 0.2s, color 0.2s;
 }
 
-.footer a:hover {
+.footer-link:hover {
     background-color: #ced4da;
     color: #212529;
+}
+
+.footer-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.footer-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
 }

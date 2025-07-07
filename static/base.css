@@ -41,6 +41,7 @@ h1 {
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
+    flex-grow: 1; /* Allow container to grow and push footer down */
 }
 
 .page-header {
