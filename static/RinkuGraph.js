@@ -66,7 +66,8 @@ export class RinkuGraph extends CanvasComponent {
             this.kanjiRegex,
             this.nodeCollapseExpandManager.collapseNode.bind(this.nodeCollapseExpandManager),
             this.nodeCollapseExpandManager.expandNode.bind(this.nodeCollapseExpandManager),
-            this.nodeFilterManager.filterNodeContent.bind(this.nodeFilterManager)
+            this.nodeFilterManager.filterNodeContent.bind(this.nodeFilterManager),
+            this.rerandomizeNode.bind(this)
         );
 
         // Initialize Meaning Display Manager
@@ -109,6 +110,17 @@ export class RinkuGraph extends CanvasComponent {
     _addKanjiEventListeners(kanjiSpan) {
         kanjiSpan.addEventListener('click', this.handleKanjiClick.bind(this));
         kanjiSpan.addEventListener('dblclick', this.handleKanjiDoubleClick.bind(this));
+    }
+
+    /**
+     * Shuffles an array in place using the Fisher-Yates algorithm.
+     * @param {Array<any>} array The array to shuffle.
+     */
+    _shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
     }
 
     async handleKanjiClick(e, isProgrammatic = false) {
@@ -157,8 +169,36 @@ export class RinkuGraph extends CanvasComponent {
             const relatedWords = await this.fetchRelatedWords(kanjiChar);
 
             if (relatedWords.length > 0) {
+                let wordsToDisplay;
+                const MAX_WORDS_TO_DISPLAY = 3;
+
+                if (relatedWords.length > MAX_WORDS_TO_DISPLAY) {
+                    kanjiElement.dataset.hasMoreWords = 'true';
+                }
+
+                if (relatedWords.length <= MAX_WORDS_TO_DISPLAY) {
+                    wordsToDisplay = relatedWords;
+                } else {
+                    // We have more than 3 words, so we need to select.
+                    // Prioritize showing the single-kanji word if it exists.
+                    const kanjiAsWord = relatedWords.find(word => word.slug === kanjiChar);
+                    const otherWords = relatedWords.filter(word => word.slug !== kanjiChar);
+
+                    if (kanjiAsWord) {
+                        // Ensure the single-kanji word is included.
+                        wordsToDisplay = [kanjiAsWord];
+                        this._shuffleArray(otherWords);
+                        const remainingSlots = MAX_WORDS_TO_DISPLAY - 1;
+                        wordsToDisplay.push(...otherWords.slice(0, remainingSlots));
+                    } else {
+                        // No single-kanji word, just pick 3 random words.
+                        this._shuffleArray(relatedWords);
+                        wordsToDisplay = relatedWords.slice(0, MAX_WORDS_TO_DISPLAY);
+                    }
+                }
+
                 this._focusKanji(kanjiElement);
-                this.drawExpansion(kanjiElement, kanjiChar, relatedWords);
+                this.drawExpansion(kanjiElement, kanjiChar, wordsToDisplay);
                 kanjiElement.classList.remove('kanji-char');
                 if (!this.expandedElements.has(kanjiElement)) {
                     this.expandedElements.add(kanjiElement);
@@ -168,7 +208,7 @@ export class RinkuGraph extends CanvasComponent {
                 if (!this.kanjiSidebar.hasParentKanji(kanjiChar)) {
                     this.kanjiSidebar.addKanji(kanjiChar, kanjiElement.parentElement);
                 }
-                console.log(`Expanded ${kanjiChar} with ${relatedWords.length} words.`);
+                console.log(`Expanded ${kanjiChar} with ${wordsToDisplay.length} words.`);
             } else {
                 console.log(`Kanji ${kanjiChar} has no new expansions. Marking as expanded-parent-kanji.`);
                 kanjiElement.classList.remove('kanji-char');
@@ -197,6 +237,74 @@ export class RinkuGraph extends CanvasComponent {
                 this.isSearching = false;
                 kanjiElement.classList.remove('kanji-loading');
             }
+        }
+    }
+
+    async rerandomizeNode(sourceKanjiElement) {
+        if (!sourceKanjiElement || !sourceKanjiElement.classList.contains('active-source-kanji')) {
+            console.warn("Cannot rerandomize: Invalid source kanji element.");
+            return;
+        }
+
+        const parentNode = sourceKanjiElement.parentElement;
+        const sourceKanji = sourceKanjiElement.textContent;
+        const MAX_WORDS_TO_DISPLAY = 3;
+
+        // 1. Partition children from this source into expanded and unexpanded
+        const allSourceChildren = Array.from(parentNode._children || []).filter(child => child.dataset.sourceKanji === sourceKanji);
+        const expandedChildren = allSourceChildren.filter(child => child._children && child._children.length > 0);
+        const unexpandedChildren = allSourceChildren.filter(child => !child._children || child._children.length === 0);
+
+        // 2. Remove unexpanded children from DOM and graph structure
+        unexpandedChildren.forEach(child => {
+            if (child.lineElement && child.lineElement.parentNode) {
+                child.lineElement.parentNode.removeChild(child.lineElement);
+            }
+            if (child.parentNode) {
+                child.parentNode.removeChild(child);
+            }
+        });
+        parentNode._children = (parentNode._children || []).filter(child => !unexpandedChildren.includes(child));
+
+        // 3. Fetch all possible related words (excluding what's currently on the graph, including the preserved expanded children)
+        const allRelatedWords = await this.fetchRelatedWords(sourceKanji);
+
+        // 4. Determine how many new words we need and select them
+        const slotsToFill = MAX_WORDS_TO_DISPLAY - expandedChildren.length;
+        let newWordsToDisplay = [];
+
+        if (slotsToFill > 0 && allRelatedWords.length > 0) {
+            // Check if the single-kanji word should be prioritized
+            const isKanjiAsWordAlreadyExpanded = expandedChildren.some(child => child.dataset.wordSlug === sourceKanji);
+            const kanjiAsWordCandidate = allRelatedWords.find(word => word.slug === sourceKanji);
+
+            let candidates = [...allRelatedWords];
+            this._shuffleArray(candidates); // Shuffle all candidates first
+
+            if (kanjiAsWordCandidate && !isKanjiAsWordAlreadyExpanded) {
+                // If the prioritized word is available and not already shown, ensure it's included.
+                // Remove it from its random position and put it at the front.
+                candidates = candidates.filter(word => word.slug !== sourceKanji);
+                candidates.unshift(kanjiAsWordCandidate);
+            }
+            
+            newWordsToDisplay = candidates.slice(0, slotsToFill);
+        }
+
+        // 5. Update the 'hasMoreWords' flag for the context menu
+        const hasMore = allRelatedWords.length > newWordsToDisplay.length;
+        if (hasMore) {
+            sourceKanjiElement.dataset.hasMoreWords = 'true';
+        } else {
+            delete sourceKanjiElement.dataset.hasMoreWords;
+        }
+
+        // 6. Draw the new expansion for the newly selected words
+        if (newWordsToDisplay.length > 0) {
+            this.drawExpansion(sourceKanjiElement, sourceKanji, newWordsToDisplay);
+            console.log(`Rerandomized ${sourceKanji} with ${newWordsToDisplay.length} new words, keeping ${expandedChildren.length} expanded nodes.`);
+        } else {
+             console.log(`Rerandomized ${sourceKanji}: No new words to add, kept ${expandedChildren.length} expanded nodes.`);
         }
     }
 
@@ -237,9 +345,48 @@ export class RinkuGraph extends CanvasComponent {
 
         const expansionRadius = 320; // 20rem * 16px/rem
         const numWords = words.length;
+        
+        // --- New Pitchfork Layout Logic ---
 
+        // 1. Determine the base direction vector
+        let baseAngle;
+        const grandparentNode = parentNode._parent;
+
+        if (grandparentNode) {
+            // Vector from grandparent to parent to determine the "away" direction
+            const grandparentPos = this._getUnscaledElementCenter(grandparentNode);
+            const parentPos = this._getUnscaledElementCenter(parentNode);
+            const dx = parentPos.ux - grandparentPos.ux;
+            const dy = parentPos.uy - grandparentPos.uy;
+            baseAngle = Math.atan2(dy, dx); // Angle of the incoming link is the direction to expand
+        } else {
+            // Default direction for root node is downwards
+            baseAngle = Math.PI / 2; // 90 degrees
+        }
+
+        // 2. Calculate angles for the tines based on the number of words
+        const angles = [];
+        const spreadAngle = Math.PI / 6; // 30 degrees between tines
+
+        switch (numWords) {
+            case 1:
+                angles.push(baseAngle);
+                break;
+            case 2:
+                angles.push(baseAngle - spreadAngle / 2); // V-shape
+                angles.push(baseAngle + spreadAngle / 2);
+                break;
+            case 3:
+            default: // Also handles > 3 as a pitchfork for now
+                angles.push(baseAngle - spreadAngle); // Pitchfork
+                angles.push(baseAngle);
+                angles.push(baseAngle + spreadAngle);
+                break;
+        }
+
+        // 3. Create nodes at the calculated positions
         words.forEach((wordData, i) => {
-            const angle = (2 * Math.PI / numWords) * i - (Math.PI / 2);
+            const angle = angles[i];
             const nodePos = {
                 ux: sourcePos.ux + expansionRadius * Math.cos(angle),
                 uy: sourcePos.uy + expansionRadius * Math.sin(angle)
@@ -253,7 +400,7 @@ export class RinkuGraph extends CanvasComponent {
             }
 
             this.nodeCreator.positionAndAppendNode(node, parentNode, nodePos);
-            this.nodeCreator.fadeInElements(line, node);
+            this.nodeCreator.fadeInElements(node, line);
             this.nodeCreator.refineLineEndpoint(line, node);
         });
     }

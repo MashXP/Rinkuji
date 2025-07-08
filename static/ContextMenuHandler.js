@@ -5,13 +5,15 @@ export class ContextMenuHandler {
      * @param {function(HTMLElement): void} collapseNodeCallback - Callback to collapse a node.
      * @param {function(HTMLElement): void} expandNodeCallback - Callback to expand a node.
      * @param {function(HTMLElement, 'all'|'kanji'|'start-kanji', string|null): void} filterNodeContentCallback - Callback to filter node content.
+     * @param {function(HTMLElement): void} rerandomizeNodeCallback - Callback to rerandomize child nodes.
      */
-    constructor(nodeContextMenu, kanjiRegex, collapseNodeCallback, expandNodeCallback, filterNodeContentCallback) {
+    constructor(nodeContextMenu, kanjiRegex, collapseNodeCallback, expandNodeCallback, filterNodeContentCallback, rerandomizeNodeCallback) {
         this.nodeContextMenu = nodeContextMenu;
         this.kanjiRegex = kanjiRegex;
         this.collapseNodeCallback = collapseNodeCallback;
         this.expandNodeCallback = expandNodeCallback;
         this.filterNodeContentCallback = filterNodeContentCallback;
+        this.rerandomizeNodeCallback = rerandomizeNodeCallback;
 
         this.activeContextMenuNode = null; // The node that the context menu is currently open for
         this.activeContextMenuKanji = null; // The specific kanji span that was right-clicked
@@ -60,6 +62,31 @@ export class ContextMenuHandler {
             } else {
                 filterStartKanjiBtn.style.display = 'none';
             }
+
+            // --- Update "Randomize" option visibility ---
+            const randomizeBtn = this.nodeContextMenu.querySelector('[data-action="randomize"]');
+            let kanjiToRandomize = null;
+
+            if (this.activeContextMenuKanji && this.activeContextMenuKanji.dataset.hasMoreWords === 'true') {
+                // Case 1: User right-clicked directly on an eligible kanji.
+                kanjiToRandomize = this.activeContextMenuKanji;
+            } else if (!this.activeContextMenuKanji && this.activeContextMenuNode) {
+                // Case 2: User right-clicked the node background.
+                // Check if there's exactly one unambiguous, randomizable source kanji in this node.
+                const eligibleKanjis = this.activeContextMenuNode.querySelectorAll('.active-source-kanji[data-has-more-words="true"]');
+                if (eligibleKanjis.length === 1) {
+                    kanjiToRandomize = eligibleKanjis[0];
+                }
+            }
+
+            if (kanjiToRandomize) {
+                randomizeBtn.style.display = 'block';
+                // Temporarily store the target kanji on the button itself for the click handler.
+                randomizeBtn._targetKanji = kanjiToRandomize;
+            } else {
+                randomizeBtn.style.display = 'none';
+                delete randomizeBtn._targetKanji; // Clean up
+            }
         }
     }
 
@@ -70,6 +97,12 @@ export class ContextMenuHandler {
         this.nodeContextMenu.style.display = 'none';
         this.activeContextMenuNode = null;
         this.activeContextMenuKanji = null;
+
+        // Clean up any temporary data on the context menu items
+        const randomizeBtn = this.nodeContextMenu.querySelector('[data-action="randomize"]');
+        if (randomizeBtn) {
+            delete randomizeBtn._targetKanji;
+        }
     }
 
     /**
@@ -98,6 +131,13 @@ export class ContextMenuHandler {
             case 'filter-start-kanji':
                 if (this.activeContextMenuKanji) {
                     this.filterNodeContentCallback(this.activeContextMenuNode, 'start-kanji', this.activeContextMenuKanji.textContent);
+                }
+                break;
+            case 'randomize':
+                // The target kanji was stored on the button element itself
+                const targetKanji = e.target._targetKanji;
+                if (targetKanji) {
+                    this.rerandomizeNodeCallback(targetKanji);
                 }
                 break;
         }

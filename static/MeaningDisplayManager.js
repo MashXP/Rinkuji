@@ -33,6 +33,7 @@ export class MeaningDisplayManager {
     }
 
     displayResult(result) {
+        const MAX_SENSES_TO_DISPLAY = 3;
         const word = result.slug;
 
         // Get unique readings and join with a line break
@@ -40,8 +41,9 @@ export class MeaningDisplayManager {
         const uniqueReadings = [...new Set(readingsArray)];
         const readings = uniqueReadings.join('<br>');
 
-        // Get all senses, prepend a bullet, and join with a line break
-        const meanings = result.senses.map(sense => '&bull; ' + sense.english_definitions.join(', ')).join('<br>');
+        // Get up to 3 senses, prepend a bullet, and join with a line break
+        const sensesToDisplay = result.senses.slice(0, MAX_SENSES_TO_DISPLAY);
+        const meanings = sensesToDisplay.map(sense => '&bull; ' + sense.english_definitions.join(', ')).join('<br>');
 
         this.meaningBar.innerHTML = `
             <div class="meaning-content">
