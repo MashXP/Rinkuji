@@ -721,6 +721,11 @@
     background-color: var(--highlight-color);
 }
 
+.suggestion-item.selected {
+    background-color: rgba(255, 255, 255, 0.2); /* A subtle highlight */
+    border-left: 3px solid var(--highlight-color); /* A colored border on the left */
+}
+
 /* --- Jisho Results Display --- */
 .jisho-results {
     margin-top: 20px;

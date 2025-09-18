@@ -22,6 +22,7 @@ export class NewSearchModal {
         this.suggestionsList = suggestionsListElement;
         this.jishoLoadingIndicator = jishoLoadingIndicatorElement;
         this.debounceTimeout = null; // For debouncing
+        this.selectedSuggestionIndex = -1; // -1 means no suggestion is selected
 
         this.init();
     }
@@ -47,8 +48,11 @@ export class NewSearchModal {
 
         this.input.addEventListener('input', () => {
             clearTimeout(this.debounceTimeout);
-            this.debounceTimeout = setTimeout(() => this.handleInput(), 1000); // 1-second debounce
+            this.debounceTimeout = setTimeout(() => this.handleInput(), 1000);
+            this.selectedSuggestionIndex = -1; // Reset selection on new input
         });
+
+        this.input.addEventListener('keydown', (event) => this.handleKeyDown(event));
     }
 
     /**
@@ -69,6 +73,46 @@ export class NewSearchModal {
         this.modal.classList.remove('visible');
         this.clearSuggestions();
         this.hideLoadingIndicator();
+    }
+
+    /**
+     * Handles keyboard navigation for suggestions.
+     * @param {KeyboardEvent} event
+     */
+    handleKeyDown(event) {
+        const suggestions = Array.from(this.suggestionsList.children);
+        if (suggestions.length === 0) return;
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault(); // Prevent cursor movement in input
+            this.selectedSuggestionIndex = (this.selectedSuggestionIndex + 1) % suggestions.length;
+            this.highlightSuggestion(suggestions);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault(); // Prevent cursor movement in input
+            this.selectedSuggestionIndex = (this.selectedSuggestionIndex - 1 + suggestions.length) % suggestions.length;
+            this.highlightSuggestion(suggestions);
+        } else if (event.key === 'Enter') {
+            if (this.selectedSuggestionIndex !== -1) {
+                event.preventDefault(); // Prevent form submission if a suggestion is selected
+                suggestions[this.selectedSuggestionIndex].click(); // Simulate click on selected suggestion
+            }
+        }
+    }
+
+    /**
+     * Highlights the currently selected suggestion.
+     * @param {HTMLElement[]} suggestions - Array of suggestion item elements.
+     */
+    highlightSuggestion(suggestions) {
+        suggestions.forEach((item, index) => {
+            if (index === this.selectedSuggestionIndex) {
+                item.classList.add('selected');
+                this.input.value = item.textContent; // Update input with selected suggestion
+                item.scrollIntoView({ block: 'nearest' }); // Scroll to selected item
+            } else {
+                item.classList.remove('selected');
+            }
+        });
     }
 
     /**
@@ -101,6 +145,7 @@ export class NewSearchModal {
      */
     renderSuggestions(suggestions) {
         this.clearSuggestions();
+        this.selectedSuggestionIndex = -1; // Reset selection when new suggestions are rendered
         if (suggestions.length > 0) {
             this.suggestionsList.style.display = 'block'; // Ensure visibility
             suggestions.forEach(suggestionText => {
