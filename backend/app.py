@@ -1,11 +1,16 @@
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request # pyright: ignore[reportMissingImports]
+from backend.src.services.data_loader_service import DataLoaderService
+from backend.src.services.graph_service import GraphService
+from backend.src.services.jisho_service import JishoService
 
 # Initialize Flask App
 app = Flask(__name__, static_folder='../frontend/src', template_folder='templates')
 
-# Jisho.org API endpoint for word searches
-JISHO_API_URL = "https://jisho.org/api/v1/search/words"
+# Initialize services
+app.data_loader = DataLoaderService(data_file_path='data.json')
+app.graph_service = GraphService()
+app.jisho_service = JishoService()
 
 @app.route('/')
 def index(): # The main page is now the Rinku visualization
@@ -23,18 +28,8 @@ def search_words():
     It takes a 'query' parameter from the request URL.
     """
     query = request.args.get('query', '')
-    if not query:
-        return jsonify({"error": "A 'query' parameter is required."}), 400
-
-    api_url = f"{JISHO_API_URL}?keyword={query}"
-
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
-        return jsonify(response.json())
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching from Jisho API: {e}")
-        return jsonify({"error": "Failed to fetch data from the external API."}), 502
+    response_data, status_code = app.jisho_service.search_words(query)
+    return jsonify(response_data), status_code
 
 @app.route('/search_by_kanji')
 def search_by_kanji():
@@ -43,19 +38,28 @@ def search_by_kanji():
     It takes a 'kanji' parameter from the request URL.
     """
     kanji = request.args.get('kanji', '')
-    if not kanji or len(kanji) != 1:
-        return jsonify({"error": "A single 'kanji' character parameter is required."}), 400
+    response_data, status_code = app.jisho_service.search_by_kanji(kanji)
+    return jsonify(response_data), status_code
 
-    # The Jisho API is smart enough to find words containing a kanji by just searching for the kanji itself.
-    api_url = f"{JISHO_API_URL}?keyword={kanji}"
+@app.route('/api/graph')
+def get_graph_data():
+    """
+    API endpoint to generate and return graph data for a given word.
+    """
+    word_text = request.args.get('word', '')
+    if not word_text:
+        return jsonify({"error": "A 'word' parameter is required."}), 400
 
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()
-        return jsonify(response.json())
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching from Jisho API: {e}")
-        return jsonify({"error": "Failed to fetch data from the external API."}), 502
+    all_words = app.data_loader.load_data()
+
+    # Filter for the requested word
+    target_words = [w for w in all_words if w.text == word_text]
+    if not target_words:
+        return jsonify({"error": f"Word '{word_text}' not found in data."}), 404
+
+    graph_data = app.graph_service.generate_graph(target_words)
+
+    return jsonify(graph_data)
 
 @app.route('/about')
 def about():
