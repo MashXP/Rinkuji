@@ -1,6 +1,4 @@
-# Rinkuji Frontend
-
-This directory contains the frontend code for the Rinkuji application.
+# Rinkuji
 
 ## What is Rinkuji?
 
