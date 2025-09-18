@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html: '<i class="fas fa-times"></i>',
                 title: 'Close Kanji List'
             },
-            offState: { // State when sidebar is hidden
+            offState: { // State when UI is hidden
                 html: '<i class="fas fa-bars"></i>',
                 title: 'Toggle Kanji List'
             }
@@ -100,7 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Instantiate NewSearchModal
+    let searchModal;
     if (newSearchModal && newSearchBtn && newSearchModalCloseBtn && newSearchInput) {
-        new NewSearchModal(newSearchModal, newSearchBtn, newSearchModalCloseBtn, newSearchInput);
+        searchModal = new NewSearchModal(newSearchModal, newSearchBtn, newSearchModalCloseBtn, newSearchInput);
+    }
+
+    // Check if the initial word is empty and show the search modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const wordParam = urlParams.get('word');
+
+    if (!wordParam && searchModal) {
+        searchModal.show();
     }
 });
