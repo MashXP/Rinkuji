@@ -19,8 +19,7 @@ class JishoService:
 
     def search_by_kanji(self, kanji):
         if not kanji or len(kanji) != 1:
-            return {"error": "A single 'kanji' character parameter is required."},
-            400
+            return {"error": "A single 'kanji' character parameter is required."}, 400
 
         api_url = f"{self.JISHO_API_URL}?keyword={kanji}"
 

@@ -79,6 +79,11 @@
                     <input type="text" id="newSearchInput" name="word" placeholder="Enter Kanji, Kana, or English word..." required autocomplete="off">
                     <button type="submit">Search</button>
                 </form>
+                <div id="suggestionsList" class="suggestions-list"></div>
+                <div id="jishoLoadingIndicator" class="loading-indicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading Jisho...
+                </div>
+                <div id="jishoResults" class="jisho-results"></div>
             </div>
         </div>
     </div>

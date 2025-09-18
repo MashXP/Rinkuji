@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const newSearchBtn = document.getElementById('newSearchBtn');
     const newSearchModalCloseBtn = document.getElementById('newSearchModalCloseBtn');
     const newSearchInput = document.getElementById('newSearchInput');
+    const suggestionsList = document.getElementById('suggestionsList');
+    const jishoLoadingIndicator = document.getElementById('jishoLoadingIndicator');
 
     // Instantiate PanZoom
     const panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
@@ -101,8 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Instantiate NewSearchModal
     let searchModal;
-    if (newSearchModal && newSearchBtn && newSearchModalCloseBtn && newSearchInput) {
-        searchModal = new NewSearchModal(newSearchModal, newSearchBtn, newSearchModalCloseBtn, newSearchInput);
+    if (newSearchModal && newSearchBtn && newSearchModalCloseBtn && newSearchInput && suggestionsList && jishoLoadingIndicator) {
+        searchModal = new NewSearchModal(newSearchModal, newSearchBtn, newSearchModalCloseBtn, newSearchInput, suggestionsList, jishoLoadingIndicator);
     }
 
     // Check if the initial word is empty and show the search modal

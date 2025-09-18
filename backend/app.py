@@ -41,6 +41,15 @@ def search_by_kanji():
     response_data, status_code = app.jisho_service.search_by_kanji(kanji)
     return jsonify(response_data), status_code
 
+@app.route('/api/suggestions')
+def get_suggestions():
+    """
+    API endpoint to get search suggestions.
+    """
+    query = request.args.get('query', '')
+    suggestions = app.data_loader.get_suggestions(query)
+    return jsonify(suggestions)
+
 @app.route('/api/graph')
 def get_graph_data():
     """

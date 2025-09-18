@@ -6,8 +6,12 @@ from backend.src.models.kanji import Kanji
 class DataLoaderService:
     def __init__(self, data_file_path: str):
         self.data_file_path = data_file_path
+        self._words_cache = None
 
     def load_data(self) -> List[Word]:
+        if self._words_cache:
+            return self._words_cache
+
         with open(self.data_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
@@ -33,7 +37,18 @@ class DataLoaderService:
                 kanji_components=kanji_components
             )
             words.append(word)
+        
+        self._words_cache = words
         return words
+
+    def get_suggestions(self, query: str) -> List[str]:
+        words = self.load_data()
+        suggestions = []
+        if query:
+            for word in words:
+                if word.text.startswith(query):
+                    suggestions.append(word.text)
+        return suggestions
 
     def get_all_kanji(self, words: List[Word]) -> Dict[int, Kanji]:
         all_kanji = {}

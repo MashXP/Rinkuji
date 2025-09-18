@@ -524,10 +524,6 @@
     color: #ecf0f1;
 }
 
-.modal-search-form input[type="text"]::placeholder {
-    color: #bdc3c7;
-}
-
 .modal-search-form input[type="text"]:focus {
     background-color: #34495e;
 }
@@ -686,7 +682,6 @@
 .custom-preset-button i {
     font-size: 18px; /* Adjusted for better padding */
     color: #bdc3c7;
-    transition: color 0.2s ease;
 }
 
 .custom-preset-button:hover i {
@@ -702,4 +697,75 @@
     font-size: 18px;
 }
 
+/* --- Suggestions List for New Search --- */
+.suggestions-list {
+    position: relative;
+    background-color: #34495e;
+    border: 1px solid #55708a; /* Changed back to original border */
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1001; /* Ensure it's above other content */
+}
 
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    color: #ecf0f1;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: var(--highlight-color);
+}
+
+/* --- Jisho Results Display --- */
+.jisho-results {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #4a627a;
+    max-height: 300px; /* Example max height */
+    overflow-y: auto;
+    color: #ecf0f1;
+}
+
+.jisho-result-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #55708a;
+}
+
+.jisho-result-item:last-child {
+    border-bottom: none;
+}
+
+.jisho-result-item h3 {
+    color: var(--highlight-color);
+    margin: 0 0 5px 0;
+    font-size: 1.2em;
+}
+
+.jisho-result-item p {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.jisho-result-item .reading {
+    color: #bdc3c7;
+    font-style: italic;
+}
+
+/* --- Loading Indicator --- */
+.loading-indicator {
+    text-align: center;
+    padding: 15px;
+    color: #bdc3c7;
+    font-size: 1.1em;
+}
+
+.loading-indicator i {
+    margin-right: 10px;
+}
