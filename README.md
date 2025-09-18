@@ -39,7 +39,8 @@ Specifically, Jisho.org utilizes data from the following open-source projects:
 
 ## Acknowledgements
 
-This project is an unofficial continuation of the original [Suiren.io](https://www.tofugu.com/japanese-learning-resources-database/suiren-io/). Special thanks to Oni Sensei for your invaluable guidance and inspiration.
+* This project is an unofficial continuation of the original [Suiren.io](https://www.tofugu.com/japanese-learning-resources-database/suiren-io/). 
+* Special thanks to Oni Sensei for your invaluable guidance and inspiration.
 
 ## Future Enhancements
 
