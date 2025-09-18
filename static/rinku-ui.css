@@ -97,8 +97,8 @@
 }
 
 .parent-kanji-sidebar input[type="text"]:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    border-color: var(--highlight-color);
+    box-shadow: 0 0 5px rgba(243, 156, 18, 0.5);
 }
 
 .parent-kanji-sidebar input[type="text"]::placeholder {
@@ -123,7 +123,7 @@
 }
 
 .parent-kanji-list-item:hover {
-    background-color: #3498db;
+    background-color: var(--highlight-color);
     color: #ffffff;
 }
 
@@ -211,7 +211,7 @@
 }
 
 .context-menu-item:hover {
-    background-color: #3498db;
+    background-color: var(--highlight-color);
 }
 
 .context-menu-item.has-submenu {
@@ -278,7 +278,7 @@
 .meaning-word {
     font-size: 1.5em;
     font-weight: bold;
-    color: #3498db;
+    color: var(--highlight-color);
     flex-shrink: 0;
     max-width: 150px;
     min-width: 40px;
@@ -329,7 +329,7 @@
 
 .jisho-link:hover {
     text-decoration: underline;
-    color: #5dade2;
+    color: #f5b041;
 }
 
 /* --- Footer for Rinku Page --- */
@@ -483,12 +483,11 @@
 
 .modal-body button {
     display: block;
-    width: 100%;
     padding: 12px 15px;
     margin: 10px 0;
     text-align: left;
-    border: 2px solid #3498db;
-    border-radius: 6px;
+    border: 3px solid var(--highlight-color);
+    border-radius: 100px;
     background-color: transparent;
     color: #ecf0f1;
     font-size: 1em;
@@ -497,7 +496,7 @@
 }
 
 .modal-body button:hover {
-    background-color: #3498db;
+    background-color: var(--highlight-color);
     transform: translateY(-2px);
 }
 
@@ -540,7 +539,7 @@
     text-align: center;
     border-radius: 0;
     border: none;
-    background-color: #3498db;
+    background-color: var(--highlight-color);
     color: white;
     padding: 0 20px;
     font-size: 1em;
@@ -548,6 +547,152 @@
 }
 
 .modal-search-form button:hover {
-    background-color: #2980b9;
+    background-color: #d68910;
     transform: none; /* Override generic modal button hover */
+}
+.options-section {
+    margin-bottom: 25px;
+}
+
+#colorInputContainer {
+    display: none; /* Initially hide the container */
+    flex-direction: column; /* Stacks the label-input pairs vertically */
+    gap: 15px; /* Space between the two color picker pairs */
+    margin-top: 15px; /* Space above the color pickers */
+    padding-top: 15px; /* Add padding at the top */
+    border-top: 1px solid #4a627a; /* Add a border at the top to separate from presets */
+}
+
+#colorInputContainer.active {
+    display: flex; /* Show the container when active */
+}
+
+/* Style for each individual label-input row within the container */
+#colorInputContainer > div { /* Assuming you'll wrap each label/input pair in a div */
+    display: flex; /* Arrange label and input side-by-side */
+    align-items: center;
+    gap: 10px; /* Space between label and input */
+}
+
+/* Style the labels within the container */
+#colorInputContainer label {
+    flex-shrink: 0; /* Prevent label from shrinking */
+    font-weight: normal; /* Less bold than section label */
+    color: #ecf0f1;
+    margin-right: 0; /* Remove any previous right margin */
+    vertical-align: middle; /* Align text vertically with the input */
+    text-align: right; /* Align label text to the right */
+}
+
+/* The preview character (e.g., 'あ') */
+.color-picker-preview {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22px;
+    pointer-events: none; /* Allows clicking through to the color input */
+    user-select: none;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.7); /* Shadow for better visibility */
+    /* The 'color' will be set by JavaScript */
+}
+
+/* Style the color input fields to resemble preset-buttons */
+#colorInputContainer input[type="color"] {
+    width: 35px; /* Fixed width, adjust as needed */
+    height: 35px; /* Same height as preset buttons */
+
+    border: none; /* Remove the border */
+    border-radius: 50%; /* Make the input container circular */
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    background: transparent; /* Ensure background is transparent to show chosen color better */
+
+    /* Remove default browser styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Hover effect for custom color input fields */
+#colorInputContainer input[type="color"]:hover {
+    transform: scale(1.05); /* Slightly larger on hover */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Internal styling for the color swatch within the input for consistency */
+#colorInputContainer input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+#colorInputContainer input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%; /* Make the color swatch circular */
+}
+#colorInputContainer input[type="color"]::-moz-color-swatch-wrapper {
+    padding: 0;
+}
+#colorInputContainer input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 50%; /* Make the color swatch circular */
+}
+
+.options-section label {
+    display: inline-block;
+    margin-bottom: 0;
+    margin-right: 15px;
+    font-weight: bold;
+    color: #bdc3c7;
+    vertical-align: middle;
+}
+
+.color-presets {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+
+.preset-button {
+    width: 35px; /* Set a fixed width */
+    height: 35px; /* Set an equal height to the width */
+    border-radius: 50%; /* This makes the button a perfect circle */
+    border: 4px solid; /* The highlight color will be the border */
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    position: relative;
+    flex-shrink: 0; /* Prevents buttons from shrinking */
+}
+
+.preset-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.custom-preset-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color and border-color are now set by JS */
+    /* The icon inside is styled separately */
+}
+
+.custom-preset-button i {
+    font-size: 18px; /* Adjusted for better padding */
+    color: #bdc3c7;
+    transition: color 0.2s ease;
+}
+
+.custom-preset-button:hover i {
+    color: #ecf0f1;
+}
+
+.hidden-color-input {
+    display: none;
 }

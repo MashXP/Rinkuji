@@ -42,9 +42,28 @@
                 <span id="modalCloseBtn" class="close-button" title="Close"><i class="fas fa-times"></i></span>
             </div>
             <div class="modal-body">
-                <p>Here are some placeholder options:</p>
-                <button>Toggle Dark/Light Mode</button>
-                <button>Another Option</button>
+                <div class="options-section">
+                    <label>Color Presets</label>
+                    <div id="colorPresets" class="color-presets">
+                        <button class="preset-button custom-preset-button" title="Custom Colors" id="customColorPresetBtn">
+                            <i class="fas fa-paint-brush"></i>
+                        </button>
+                    </div>
+                    <div id="colorInputContainer" class="hidden">
+                        <div>
+                            <label for="bgColorPicker">Background</label>
+                            <input type="color" id="bgColorPicker" title="Background Color">
+                        </div>
+                        <div>
+                            <label for="highlightColorPicker">Highlight</label>
+                            <input type="color" id="highlightColorPicker" title="Highlight Color">
+                        </div>
+                        <div>
+                            <label for="textColorPicker">Text</label>
+                            <input type="color" id="textColorPicker" title="Text Color">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
