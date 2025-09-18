@@ -1,3 +1,5 @@
+import localStorageCacheService from '../services/localStorageCacheService.js'; // Import the cache service
+
 export class OptionsMenu {
     /**
      * Manages the options modal dialog.
@@ -22,6 +24,9 @@ export class OptionsMenu {
         this.customColorPresetBtn = document.getElementById('customColorPresetBtn'); // New: Custom color button
         this.colorInputContainer = document.getElementById('colorInputContainer'); // New: Reference to the container
         this.customColorPreview = null; // Will hold the 'あ' span for the custom button
+
+        // --- New property for Clear Cache button ---
+        this.clearCacheBtn = document.getElementById('clearCacheButton'); // Assuming this button exists in HTML
 
         this.CSS_VAR_BG = '--canvas-bg-color';
         this.CSS_VAR_HIGHLIGHT = '--highlight-color';
@@ -72,6 +77,20 @@ export class OptionsMenu {
 
         this._addOptionEventListeners();
         this._loadSettings(); // Load settings AFTER event listeners are added
+
+        // --- New event listener for Clear Cache button ---
+        if (this.clearCacheBtn) {
+            this.clearCacheBtn.addEventListener('click', () => this._clearCache());
+        }
+    }
+
+    /**
+     * Clears the application cache and provides user feedback.
+     */
+    _clearCache() {
+        localStorageCacheService.clear();
+        alert('Cache cleared successfully!'); // Simple feedback
+        console.log('Application cache cleared.');
     }
 
     /**

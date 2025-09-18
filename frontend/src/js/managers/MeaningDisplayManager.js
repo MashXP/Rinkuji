@@ -1,4 +1,6 @@
 // d:/Rinkuji/static/MeaningDisplayManager.js
+import localStorageCacheService from '../services/localStorageCacheService.js'; // Import the cache service
+
 export class MeaningDisplayManager {
     constructor(meaningBarElement) {
         this.meaningBar = meaningBarElement;
@@ -14,6 +16,15 @@ export class MeaningDisplayManager {
         this.meaningBar.innerHTML = `<p>Loading definition for ${wordSlug}...</p>`;
 
         try {
+            // 1. Check cache first
+            const cachedData = localStorageCacheService.get(wordSlug);
+            if (cachedData) {
+                console.log(`MeaningDisplayManager: Serving '${wordSlug}' from cache.`);
+                this.displayResult(cachedData);
+                return; // Exit if data found in cache
+            }
+
+            console.log(`MeaningDisplayManager: Fetching '${wordSlug}' from API.`);
             const response = await fetch(`/search_words?query=${encodeURIComponent(wordSlug)}`);
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);
@@ -22,6 +33,8 @@ export class MeaningDisplayManager {
             const result = data.data.find(item => item.slug === wordSlug);
 
             if (result) {
+                // 2. Store data in cache after successful API call
+                localStorageCacheService.set(wordSlug, result);
                 this.displayResult(result);
             } else {
                 this.meaningBar.innerHTML = `<p>No definition found for ${wordSlug}.</p>`;
