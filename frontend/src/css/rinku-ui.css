@@ -696,3 +696,10 @@
 .hidden-color-input {
     display: none;
 }
+
+.footer-rinku .footer-btn .fas,
+.footer-rinku .hide-ui-btn .fas {
+    font-size: 18px;
+}
+
+

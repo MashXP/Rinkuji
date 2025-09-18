@@ -2,7 +2,7 @@ import requests
 from flask import Flask, jsonify, render_template, request
 
 # Initialize Flask App
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend/src', template_folder='templates')
 
 # Jisho.org API endpoint for word searches
 JISHO_API_URL = "https://jisho.org/api/v1/search/words"

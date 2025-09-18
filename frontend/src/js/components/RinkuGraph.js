@@ -1,15 +1,15 @@
 import { CanvasComponent } from './CanvasComponent.js';
 import { KanjiSidebar } from './KanjiSidebar.js';
-import { NodeFilterManager } from './NodeFilterManager.js';
-import { ContextMenuHandler } from './ContextMenuHandler.js';
-import { NodeDragHandler } from './NodeDragHandler.js';
+import { NodeFilterManager } from '../managers/NodeFilterManager.js';
+import { ContextMenuHandler } from '../managers/ContextMenuHandler.js';
+import { NodeDragHandler } from '../utils/NodeDragHandler.js';
 import { GraphInitializer } from './GraphInitializer.js';
-import { NodeCreator } from './NodeCreator.js';
-import { LineCreator } from './LineCreator.js';
-import { NodeMovementManager } from './NodeMovementManager.js';
-import { NodeDuplicator } from './NodeDuplicator.js';
-import { NodeCollapseExpandManager } from './NodeCollapseExpandManager.js';
-import { MeaningDisplayManager } from './MeaningDisplayManager.js';
+import { NodeCreator } from '../utils/NodeCreator.js';
+import { LineCreator } from '../utils/LineCreator.js';
+import { NodeMovementManager } from '../managers/NodeMovementManager.js';
+import { NodeDuplicator } from '../utils/NodeDuplicator.js';
+import { NodeCollapseExpandManager } from '../managers/NodeCollapseExpandManager.js';
+import { MeaningDisplayManager } from '../managers/MeaningDisplayManager.js';
 
 // Class to manage the Rinku Graph functionality (expansion, nodes, sidebar)
 export class RinkuGraph extends CanvasComponent {

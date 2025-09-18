@@ -1,8 +1,8 @@
-import { PanZoom } from './PanZoom.js';
-import { RinkuGraph } from './RinkuGraph.js';
-import { OptionsMenu } from './OptionsMenu.js';
-import { NewSearchModal } from './NewSearchModal.js';
-import { UITogglingManager } from './UITogglingManager.js';
+import { PanZoom } from './utils/PanZoom.js';
+import { RinkuGraph } from './components/RinkuGraph.js';
+import { OptionsMenu } from './components/OptionsMenu.js';
+import { NewSearchModal } from './components/NewSearchModal.js';
+import { UITogglingManager } from './managers/UITogglingManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const viewport = document.getElementById('rinkuViewport');

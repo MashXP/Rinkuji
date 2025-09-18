@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rinku</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='rinku.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='rinku-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rinku.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rinku-ui.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="rinku-body">
@@ -33,7 +33,7 @@
             </div>
     </div>
     <div id="meaningBar" class="meaning-bar"></div>
-    <script type="module" src="{{ url_for('static', filename='main.js') }}" defer></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 
     <div id="optionsModal" class="modal">
         <div class="modal-content">
@@ -99,7 +99,7 @@
 
     <footer class="footer footer-rinku">
         <button id="hideUiBtn" class="hide-ui-btn" title="Hide UI Controls"><i class="fas fa-caret-right"></i></button>
-        <button id="optionsBtn" class="footer-btn" title="Options"><i class="fas fa-cog"></i></button>
+        <button id="optionsBtn" class="footer-btn" title="Options">⚙️</button>
         <a href="{{ url_for('about') }}">About</a>
         <button id="newSearchBtn">New Search</button>
     </footer>
