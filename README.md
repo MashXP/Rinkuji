@@ -2,6 +2,8 @@
 
 ## What is Rinkuji?
 
+![Rinkuji Banner](banner.png)
+
 Rinkuji (リンク字) is a web application designed to help you explore the intricate connections between Japanese words and the kanji they contain. By inputting a word, you can generate a dynamic, interactive graph that visually maps out the relationships between kanji, their components, and other related words.
 
 Our goal is to provide a unique and intuitive learning tool for students of the Japanese language, making the process of understanding kanji and vocabulary more engaging and memorable.
@@ -26,49 +28,26 @@ Our goal is to provide a unique and intuitive learning tool for students of the 
 All dictionary and kanji data presented in Rinkuji is sourced directly from the [Jisho.org](https://jisho.org/) API. Jisho.org is a powerful Japanese-English dictionary that aggregates data from several projects. We are incredibly grateful to the Jisho.org team and the creators of these underlying data sources for making this information publicly available.
 
 Specifically, Jisho.org utilizes data from the following open-source projects:
-*   [JMdict](http://www.edrdg.org/jmdict/j_jmdict.html): A comprehensive general dictionary, property of the Electronic Dictionary Research and Development Group (EDRDG), used under their license.
-*   [Kanjidic2](http://www.edrdg.org/wiki/index.php/KANJIDIC_Project): A kanji database including readings, meanings, and metadata, also property of EDRDG and used under their license.
-*   [Tatoeba Project](https://tatoeba.org/): Provides most example sentences, licensed under Creative Commons CC-BY.
-*   [KanjiVG](https://kanjivg.tagaini.net/): Provides stroke order data for kanji, copyright © 2009-2012 Ulrich Apel and released under the Creative Commons Attribution-Share Alike 3.0 license.
-*   [JMnedict](https://www.edrdg.org/jmdict/j_jmdict.html): A database of Japanese proper names, property of EDRDG and used under their license.
-*   [RADKFILE](https://www.edrdg.org/wiki/index.php/RADKFILE_Project): A database of kanji radicals, property of EDRDG and used under their license.
-*   [Jreibun Project](https://jreibun.com/): Provides high-quality example sentences.
-*   [DBpedia](https://dbpedia.org/): Provides Wikipedia articles, dual licensed under Creative Commons Attribution-ShareAlike 3.0 and GNU Free Documentation License.
-*   [Jonathan Waller's JLPT Resources page](https://www.jlpt.jp/e/): Provides JLPT level information.
-*   [WaniKani audio](https://www.wanikani.com/): Provides audio files.
+*   [JMdict](http://www.edrdg.org/jmdict/j_jmdict.html): A comprehensive general dictionary, property of the Electronic Dictionary Research and Development Group (EDRDG), used under their license.</li>
+*   [Kanjidic2](http://www.edrdg.org/wiki/index.php/KANJIDIC_Project): A kanji database including readings, meanings, and metadata, also property of EDRDG and used under their license.</li>
+*   [Tatoeba Project](https://tatoeba.org/): Provides most example sentences, licensed under Creative Commons CC-BY.</li>
+*   [KanjiVG](https://kanjivg.tagaini.net/): Provides stroke order data for kanji, copyright © 2009-2012 Ulrich Apel and released under the Creative Commons Attribution-Share Alike 3.0 license.</li>
+*   [JMnedict](https://www.edrdg.org/jmdict/j_jmdict.html): A database of Japanese proper names, property of EDRDG and used under their license.</li>
+*   [RADKFILE](https://www.edrdg.org/wiki/index.php/RADKFILE_Project): A database of kanji radicals, property of EDRDG and used under their license.</li>
+*   [Jreibun Project](https://jreibun.com/): Provides high-quality example sentences.</li>
+*   [DBpedia](https://dbpedia.org/): Provides Wikipedia articles, dual licensed under Creative Commons Attribution-ShareAlike 3.0 and GNU Free Documentation License.</li>
+*   [Jonathan Waller's JLPT Resources page](https://www.jlpt.jp/e/): Provides JLPT level information.</li>
+*   [WaniKani audio](https://www.wanikani.com/): Provides audio files.</li>
+</ul>
 
 ## Acknowledgements
 
 * This project is an unofficial continuation of the original [Suiren.io](https://www.tofugu.com/japanese-learning-resources-database/suiren-io/). 
 * Special thanks to Oni Sensei for your invaluable guidance and inspiration.
 
-## Development
+## Deployment
 
-### Running Tests
-
-To run the frontend tests, navigate to the `frontend` directory and use the following commands:
-
-*   **Run all tests:**
-    ```bash
-    ./node_modules/.bin/jest
-    ```
-*   **Run tests with coverage:**
-    ```bash
-    ./node_modules/.bin/jest --coverage
-    ```
-
-#### Backend Tests
-
-To run the backend tests, ensure you are in the project root directory and use the following commands:
-
-1.  **Install dependencies:**
-    ```bash
-    pip install -r backend/requirements.txt
-    ```
-2.  **Run all tests:**
-    ```bash
-    cd backend && pytest
-    ```
+Rinkuji is deployed on [Render.com](https://render.com/), a cloud platform that provides a simple way to host web applications. The backend is a Flask application, and the frontend is a static web application.
 
 ## Future Enhancements
 

@@ -1,8 +1,6 @@
 # Changelog
 
-## [Unreleased]
-
-### 2025-09-19
+## [1.0.0 - RELEASE] - 2025-09-19
 #### Added
 - **Frontend Tests**: Implemented comprehensive unit and integration tests for frontend components (main.js, UITogglingManager.js, api.js, etc.).
 #### Changed
