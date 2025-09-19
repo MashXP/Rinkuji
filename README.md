@@ -2,11 +2,13 @@
 
 ## What is Rinkuji?
 
-![Rinkuji Banner](banner.png)
 
 Rinkuji (リンク字) is a web application designed to help you explore the intricate connections between Japanese words and the kanji they contain. By inputting a word, you can generate a dynamic, interactive graph that visually maps out the relationships between kanji, their components, and other related words.
 
+![Rinkuji Banner](banner.png)
+
 Our goal is to provide a unique and intuitive learning tool for students of the Japanese language, making the process of understanding kanji and vocabulary more engaging and memorable.
+
 
 ## How to Use
 
@@ -51,13 +53,18 @@ Rinkuji is deployed on [Render.com](https://render.com/), a cloud platform that 
 
 ## Future Enhancements
 
+== soon ==
 *   ~~Finalize the Frontend test (urgent)~~  
 *   ~~**API Caching:** Introduce caching mechanisms in the backend for Jisho API calls to boost performance and minimize redundant requests.~~ (Implemented)
-*   **Save/Load Graphs:** Enable users to save their generated graphs and load them for future reference or sharing.
-*   **Advanced Search & Filtering:** Expand search capabilities with options like radical search, stroke count, and JLPT level filtering.
-*   **Gamification Elements**: Add different game modes to make it more competitive.
-*   **Node Rearrangement**: Further work on node rearrangement algorithms for better graph layouts.
+*   ~~DEPLOYED~~
+*   **Design / Add Web icon**
 *   **Smooth Motion Animation**: Implement smoother motion animations for ***BEEEFIER*** PCs to enhance visual experience. ✨ AESTHETICZ ✨
-*   **Sounds**: Integrate audio cues for interactions and pronunciations. ✨ AESTHETICZ ✨
+*   **Node Rearrangement**: Further work on node rearrangement algorithms for better graph layouts.
 *   **First-time User Tutorial**: Implement an interactive tutorial or "how to play" guide for new users.
+*   **Advanced Search & Filtering:** Expand search capabilities with options like radical search, stroke count, and JLPT level filtering.
+
+== not yet ==
+*   **Sounds**: Integrate audio cues for interactions and pronunciations. ✨ AESTHETICZ ✨
+*   **Save/Load Graphs:** Enable users to save their generated graphs and load them for future reference or sharing.
+*   **Gamification Elements**: Add different game modes to make it more competitive.
 *   ...
