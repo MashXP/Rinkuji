@@ -9,6 +9,10 @@ export class CanvasComponent {
         if (new.target === CanvasComponent) {
             throw new TypeError("Cannot construct CanvasComponent instances directly. This is an abstract class.");
         }
+        // Enforce abstract method implementation by checking if the subclass has overridden it.
+        if (this.addEventListeners === CanvasComponent.prototype.addEventListeners) {
+            throw new Error("Method 'addEventListeners()' must be implemented by subclasses.");
+        }
 
         this.viewport = viewport;
         this.canvas = canvas;
@@ -17,11 +21,10 @@ export class CanvasComponent {
 
     /**
      * Abstract method to be implemented by subclasses to add their specific event listeners.
-     * It's called in the constructor to ensure listeners are set up during instantiation.
      */
     addEventListeners() {
-        // No-op in the abstract class. Subclasses must override this method.
-        throw new Error("Method 'addEventListeners()' must be implemented by subclasses.");
+        // This is a placeholder for the abstract method check in the constructor.
+        // It should be overridden by subclasses and is not intended to be called on the base class.
     }
 
     /**

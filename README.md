@@ -42,9 +42,37 @@ Specifically, Jisho.org utilizes data from the following open-source projects:
 * This project is an unofficial continuation of the original [Suiren.io](https://www.tofugu.com/japanese-learning-resources-database/suiren-io/). 
 * Special thanks to Oni Sensei for your invaluable guidance and inspiration.
 
+## Development
+
+### Running Tests
+
+To run the frontend tests, navigate to the `frontend` directory and use the following commands:
+
+*   **Run all tests:**
+    ```bash
+    ./node_modules/.bin/jest
+    ```
+*   **Run tests with coverage:**
+    ```bash
+    ./node_modules/.bin/jest --coverage
+    ```
+
+#### Backend Tests
+
+To run the backend tests, ensure you are in the project root directory and use the following commands:
+
+1.  **Install dependencies:**
+    ```bash
+    pip install -r backend/requirements.txt
+    ```
+2.  **Run all tests:**
+    ```bash
+    cd backend && pytest
+    ```
+
 ## Future Enhancements
 
-*   Finalize the Frontend test (urgent)  
+*   ~~Finalize the Frontend test (urgent)~~  
 *   ~~**API Caching:** Introduce caching mechanisms in the backend for Jisho API calls to boost performance and minimize redundant requests.~~ (Implemented)
 *   **Save/Load Graphs:** Enable users to save their generated graphs and load them for future reference or sharing.
 *   **Advanced Search & Filtering:** Expand search capabilities with options like radical search, stroke count, and JLPT level filtering.

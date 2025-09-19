@@ -1,7 +1,7 @@
 // This service will communicate with the backend API.
 
 // Function to fetch suggestions from our backend (which queries data.json)
-async function getLocalSuggestions(query) {
+export async function getLocalSuggestions(query) {
     if (!query) {
         return [];
     }

@@ -43,20 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const jishoLoadingIndicator = document.getElementById('jishoLoadingIndicator');
 
     // Instantiate PanZoom
-    const panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
+    let panZoom;
+    if (viewport && canvas && zoomInBtn && zoomOutBtn && resetViewBtn && zoomMeter) {
+        panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
+    }
 
     // Instantiate RinkuGraph, passing PanZoom instance
-    const rinkuGraph = new RinkuGraph(
-        viewport,
-        canvas,
-        wordContainer,
-        svgLayer,
-        nodesContainer,
-        parentKanjiSidebar,
-        parentKanjiSearchInput,
-        parentKanjiListContainer,
-        panZoom
-    );
+    if (panZoom && wordContainer && svgLayer && nodesContainer && parentKanjiSidebar && parentKanjiSearchInput && parentKanjiListContainer) {
+        new RinkuGraph(
+            viewport,
+            canvas,
+            wordContainer,
+            svgLayer,
+            nodesContainer,
+            parentKanjiSidebar,
+            parentKanjiSearchInput,
+            parentKanjiListContainer,
+            panZoom
+        );
+    }
 
     // --- UI Toggling Centralization ---
     // Use the UITogglingManager's static helper to set up UI controls.

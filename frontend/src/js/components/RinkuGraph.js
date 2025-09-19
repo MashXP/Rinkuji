@@ -64,10 +64,10 @@ export class RinkuGraph extends CanvasComponent {
         this.contextMenuHandler = new ContextMenuHandler(
             document.getElementById('nodeContextMenu'),
             this.kanjiRegex,
-            this.nodeCollapseExpandManager.collapseNode.bind(this.nodeCollapseExpandManager),
-            this.nodeCollapseExpandManager.expandNode.bind(this.nodeCollapseExpandManager),
-            this.nodeFilterManager.filterNodeContent.bind(this.nodeFilterManager),
-            this.rerandomizeNode.bind(this)
+            (node) => this.nodeCollapseExpandManager.collapseNode(node),
+            (node) => this.nodeCollapseExpandManager.expandNode(node),
+            (node, filterType, clickedKanji) => this.nodeFilterManager.filterNodeContent(node, filterType, clickedKanji),
+            (sourceKanjiElement) => this.rerandomizeNode(sourceKanjiElement)
         );
 
         // Initialize Meaning Display Manager

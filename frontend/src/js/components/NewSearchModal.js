@@ -89,7 +89,11 @@ export class NewSearchModal {
             this.highlightSuggestion(suggestions);
         } else if (event.key === 'ArrowUp') {
             event.preventDefault(); // Prevent cursor movement in input
-            this.selectedSuggestionIndex = (this.selectedSuggestionIndex - 1 + suggestions.length) % suggestions.length;
+            if (this.selectedSuggestionIndex <= 0) {
+                this.selectedSuggestionIndex = suggestions.length - 1;
+            } else {
+                this.selectedSuggestionIndex--;
+            }
             this.highlightSuggestion(suggestions);
         } else if (event.key === 'Enter') {
             if (this.selectedSuggestionIndex !== -1) {
