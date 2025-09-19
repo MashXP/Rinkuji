@@ -5,7 +5,7 @@ from backend.src.services.data_loader_service import DataLoaderService
 
 class GraphService:
     def __init__(self):
-        self.data_loader = DataLoaderService() # Removed data_file_path argument
+        self.data_loader = DataLoaderService(data_file_path='data.json') # Reverted to original
 
     def generate_graph(self, target_words: List[Word]) -> Dict:
         nodes = []
