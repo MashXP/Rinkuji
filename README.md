@@ -51,6 +51,10 @@ Specifically, Jisho.org utilizes data from the following open-source projects:
 
 Rinkuji is deployed on [Render.com](https://render.com/), a cloud platform that provides a simple way to host web applications. The backend is a Flask application, and the frontend is a static web application.
 
+## License
+
+This project is licensed under the GNU AGPLv3 License - see the [LICENSE](LICENSE) file for details.
+
 ## Future Enhancements
 
 == soon ==
