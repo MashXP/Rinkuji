@@ -1,18 +1,25 @@
 import json
+import os # Import os
 from typing import List, Dict
 from backend.src.models.word import Word
 from backend.src.models.kanji import Kanji
 
 class DataLoaderService:
-    def __init__(self, data_file_path: str):
-        self.data_file_path = data_file_path
+    def __init__(self):
+        # data_file_path is no longer passed as an argument
         self._words_cache = None
 
     def load_data(self) -> List[Word]:
         if self._words_cache:
             return self._words_cache
 
-        with open(self.data_file_path, 'r', encoding='utf-8') as f:
+        # Construct absolute path to data.json relative to this file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Go up two levels (from src/services to backend/)
+        # Then append data.json
+        data_file_path = os.path.join(current_dir, '..', '..', 'data.json')
+
+        with open(data_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         words = []

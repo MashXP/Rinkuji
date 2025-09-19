@@ -1,4 +1,5 @@
 import requests
+import os # Import the os module
 from flask import Flask, jsonify, render_template, request # pyright: ignore[reportMissingImports]
 from backend.src.services.data_loader_service import DataLoaderService
 from backend.src.services.graph_service import GraphService
@@ -7,8 +8,12 @@ from backend.src.services.jisho_service import JishoService
 # Initialize Flask App
 app = Flask(__name__, static_folder='../frontend/src', template_folder='templates')
 
+# Get the absolute path to the directory containing app.py
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 # Initialize services
-app.data_loader = DataLoaderService(data_file_path='data.json')
+# Use os.path.join to construct the absolute path to data.json
+app.data_loader = DataLoaderService() # Removed data_file_path argument
 app.graph_service = GraphService()
 app.jisho_service = JishoService()
 
