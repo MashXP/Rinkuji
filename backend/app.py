@@ -1,9 +1,9 @@
 import requests
 import os # Import the os module
 from flask import Flask, jsonify, render_template, request # pyright: ignore[reportMissingImports]
-from backend.src.services.data_loader_service import DataLoaderService
-from backend.src.services.graph_service import GraphService
-from backend.src.services.jisho_service import JishoService
+from .src.services.data_loader_service import DataLoaderService
+from .src.services.graph_service import GraphService
+from .src.services.jisho_service import JishoService
 
 # Initialize Flask App
 app = Flask(__name__, static_folder='../frontend/src', template_folder='templates')
