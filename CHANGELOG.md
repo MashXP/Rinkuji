@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### 2025-09-19
+#### Added
+- **Frontend Tests**: Implemented comprehensive unit and integration tests for frontend components (main.js, UITogglingManager.js, api.js, etc.).
+#### Changed
+- **README Update**: Updated README.md with instructions for running frontend and backend tests.
+- **Backend Deployment Prep**: Added gunicorn to backend requirements, created Procfile, and moved data.json for Render.com deployment.
+
 ### 2025-09-18
 #### Added
 - **Cache Feature**: Implemented local storage caching for meaning retrieval and added clear cache functionality.
