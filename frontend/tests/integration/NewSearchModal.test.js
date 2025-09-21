@@ -1,3 +1,5 @@
+import { fireEvent, act } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { NewSearchModal } from '../../src/js/components/NewSearchModal.js';
 import * as apiService from '@services/api.js';
 
@@ -48,173 +50,192 @@ describe('Integration: NewSearchModal', () => {
 
         jest.useFakeTimers();
         jest.clearAllMocks();
+        apiService.getSuggestions.mockResolvedValue([]); // Default mock
     });
 
     afterEach(() => {
         jest.runOnlyPendingTimers();
         jest.useRealTimers();
+        document.body.innerHTML = '';
     });
 
-    test('modal should open when open button is clicked', () => {
-        openButtonElement.click();
-        expect(modalElement.classList.contains('visible')).toBe(true);
+    test('modal should open when open button is clicked and focus input', () => {
+        fireEvent.click(openButtonElement);
+        expect(modalElement).toHaveClass('visible');
         jest.advanceTimersByTime(50); // Wait for setTimeout in show()
-        expect(document.activeElement).toBe(inputElement);
+        expect(inputElement).toHaveFocus();
     });
 
     test('modal should close when close button is clicked', () => {
-        openButtonElement.click();
-        expect(modalElement.classList.contains('visible')).toBe(true);
-
-        closeButtonElement.click();
-        expect(modalElement.classList.contains('visible')).toBe(false);
+        fireEvent.click(openButtonElement);
+        expect(modalElement).toHaveClass('visible');
+        fireEvent.click(closeButtonElement);
+        expect(modalElement).not.toHaveClass('visible');
     });
 
     test('modal should close when clicking outside the modal content', () => {
-        openButtonElement.click();
-        expect(modalElement.classList.contains('visible')).toBe(true);
-
-        modalElement.click(); // Click on the modal overlay itself
-        expect(modalElement.classList.contains('visible')).toBe(false);
+        fireEvent.click(openButtonElement);
+        expect(modalElement).toHaveClass('visible');
+        fireEvent.click(modalElement); // Click on the modal overlay itself
+        expect(modalElement).not.toHaveClass('visible');
     });
 
     test('modal should close when Escape key is pressed', () => {
-        openButtonElement.click();
-        expect(modalElement.classList.contains('visible')).toBe(true);
-
-        const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-        window.dispatchEvent(escapeEvent);
-        expect(modalElement.classList.contains('visible')).toBe(false);
+        fireEvent.click(openButtonElement);
+        expect(modalElement).toHaveClass('visible');
+        fireEvent.keyDown(window, { key: 'Escape' });
+        expect(modalElement).not.toHaveClass('visible');
     });
 
     test('search input should trigger getSuggestions after debounce', async () => {
         apiService.getSuggestions.mockResolvedValueOnce(['suggestion1', 'suggestion2']);
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-
-        expect(apiService.getSuggestions).not.toHaveBeenCalled();
-
-        jest.advanceTimersByTime(1000);
-
-        // Allow promises to resolve after timers have been advanced
-        await Promise.resolve();
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            expect(apiService.getSuggestions).not.toHaveBeenCalled();
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve(); // Flush promises
+        });
 
         expect(apiService.getSuggestions).toHaveBeenCalledWith('test');
-        expect(suggestionsListElement.children.length).toBe(2);
-        expect(suggestionsListElement.children[0].textContent).toBe('suggestion1');
-        expect(suggestionsListElement.children[1].textContent).toBe('suggestion2');
-        expect(jishoLoadingIndicatorElement.style.display).toBe('none');
+        expect(suggestionsListElement).toHaveTextContent('suggestion1');
+        expect(suggestionsListElement).toHaveTextContent('suggestion2');
+        expect(jishoLoadingIndicatorElement).not.toBeVisible();
     });
 
     test('loading indicator should be shown and hidden during suggestion fetch', async () => {
-        apiService.getSuggestions.mockImplementation(() => {
-            return new Promise(resolve => setTimeout(() => resolve(['suggestion']), 500));
+        let resolvePromise;
+        const promise = new Promise(resolve => {
+            resolvePromise = resolve;
+        });
+        apiService.getSuggestions.mockReturnValue(promise);
+
+        fireEvent.click(openButtonElement);
+
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000); // Trigger debounce to call handleInput
         });
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
+        // The indicator should now be visible as handleInput is awaiting the promise
+        expect(jishoLoadingIndicatorElement).toBeVisible();
 
-        jest.advanceTimersByTime(100); // Before debounce
-        expect(jishoLoadingIndicatorElement.style.display).toBe('none');
+        await act(async () => {
+            resolvePromise(['suggestion']); // Manually resolve the promise
+            await promise; // Wait for the promise to resolve and for the .finally() block to run
+        });
 
-        jest.advanceTimersByTime(900); // After debounce, before API call resolves
-        expect(jishoLoadingIndicatorElement.style.display).toBe('block');
-
-        jest.advanceTimersByTime(500); // After API call resolves
-        // Allow the finally block's microtask to run
-        await Promise.resolve();
-
-        expect(jishoLoadingIndicatorElement.style.display).toBe('none');
+        expect(jishoLoadingIndicatorElement).not.toBeVisible();
     });
 
-    test('selecting a suggestion should update input and clear suggestions', async () => {
+    test('"No results found" should be displayed for empty suggestion list with a query', async () => {
+        apiService.getSuggestions.mockResolvedValueOnce([]);
+
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'noresults' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
+
+        expect(apiService.getSuggestions).toHaveBeenCalledWith('noresults');
+        expect(suggestionsListElement).toHaveTextContent('No results found');
+    });
+
+    test('selecting a suggestion should update input, clear suggestions, and dispatch events', async () => {
         apiService.getSuggestions.mockResolvedValueOnce(['suggestion1', 'suggestion2']);
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve(); // Allow promises to resolve
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
         const firstSuggestion = suggestionsListElement.children[0];
-        firstSuggestion.click();
+        const changeSpy = jest.spyOn(inputElement, 'dispatchEvent');
+        const keydownSpy = jest.spyOn(inputElement, 'dispatchEvent');
 
-        expect(inputElement.value).toBe('suggestion1');
-        expect(suggestionsListElement.children.length).toBe(0);
-        expect(suggestionsListElement.style.display).toBe('none');
+        fireEvent.click(firstSuggestion);
+
+        expect(inputElement).toHaveValue('suggestion1');
+        expect(suggestionsListElement).toBeEmptyDOMElement();
+        expect(changeSpy).toHaveBeenCalledWith(expect.any(Event));
+        expect(keydownSpy).toHaveBeenCalledWith(expect.any(KeyboardEvent));
     });
 
     test('keyboard navigation (ArrowDown) should highlight suggestions and update input', async () => {
         apiService.getSuggestions.mockResolvedValueOnce(['suggestion1', 'suggestion2', 'suggestion3']);
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
         // Arrow Down 1
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-        expect(suggestionsListElement.children[0].classList.contains('selected')).toBe(true);
-        expect(inputElement.value).toBe('suggestion1');
+        fireEvent.keyDown(inputElement, { key: 'ArrowDown' });
+        expect(suggestionsListElement.children[0]).toHaveClass('selected');
+        expect(inputElement).toHaveValue('suggestion1');
 
         // Arrow Down 2
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-        expect(suggestionsListElement.children[1].classList.contains('selected')).toBe(true);
-        expect(inputElement.value).toBe('suggestion2');
+        fireEvent.keyDown(inputElement, { key: 'ArrowDown' });
+        expect(suggestionsListElement.children[1]).toHaveClass('selected');
+        expect(inputElement).toHaveValue('suggestion2');
 
         // Arrow Down 3 (wrap around)
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-        expect(suggestionsListElement.children[2].classList.contains('selected')).toBe(true);
-        expect(inputElement.value).toBe('suggestion3');
+        fireEvent.keyDown(inputElement, { key: 'ArrowDown' });
+        expect(suggestionsListElement.children[2]).toHaveClass('selected');
+        expect(inputElement).toHaveValue('suggestion3');
 
         // Arrow Down 4 (wrap around to first)
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-        expect(suggestionsListElement.children[0].classList.contains('selected')).toBe(true);
-        expect(inputElement.value).toBe('suggestion1');
+        fireEvent.keyDown(inputElement, { key: 'ArrowDown' });
+        expect(suggestionsListElement.children[0]).toHaveClass('selected');
+        expect(inputElement).toHaveValue('suggestion1');
     });
 
     test('keyboard navigation (ArrowUp) should highlight suggestions and update input', async () => {
         apiService.getSuggestions.mockResolvedValueOnce(['suggestion1', 'suggestion2', 'suggestion3']);
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
         // Arrow Up 1 (wrap around to last)
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-        expect(suggestionsListElement.children[2].classList.contains('selected')).toBe(true);
-        expect(inputElement.value).toBe('suggestion3');
+        fireEvent.keyDown(inputElement, { key: 'ArrowUp' });
+        expect(suggestionsListElement.children[2]).toHaveClass('selected');
+        expect(inputElement).toHaveValue('suggestion3');
 
         // Arrow Up 2
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-        expect(suggestionsListElement.children[1].classList.contains('selected')).toBe(true);
-        expect(inputElement.value).toBe('suggestion2');
+        fireEvent.keyDown(inputElement, { key: 'ArrowUp' });
+        expect(suggestionsListElement.children[1]).toHaveClass('selected');
+        expect(inputElement).toHaveValue('suggestion2');
     });
 
     test('pressing Enter on a selected suggestion should trigger its click behavior', async () => {
         apiService.getSuggestions.mockResolvedValueOnce(['suggestion1', 'suggestion2']);
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
         const firstSuggestion = suggestionsListElement.children[0];
         const clickSpy = jest.spyOn(firstSuggestion, 'click');
 
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' })); // Select first suggestion
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        fireEvent.keyDown(inputElement, { key: 'ArrowDown' }); // Select first suggestion
+        fireEvent.keyDown(inputElement, { key: 'Enter' });
 
         expect(clickSpy).toHaveBeenCalled();
-        expect(inputElement.value).toBe('suggestion1');
-        expect(suggestionsListElement.children.length).toBe(0);
+        expect(inputElement).toHaveValue('suggestion1');
+        expect(suggestionsListElement).toBeEmptyDOMElement();
 
         clickSpy.mockRestore();
     });
@@ -222,60 +243,58 @@ describe('Integration: NewSearchModal', () => {
     test('pressing Enter without a selected suggestion should not trigger click behavior', async () => {
         apiService.getSuggestions.mockResolvedValueOnce(['suggestion1']);
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
         const firstSuggestion = suggestionsListElement.children[0];
         const clickSpy = jest.spyOn(firstSuggestion, 'click');
 
-        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); // No suggestion selected
+        fireEvent.keyDown(inputElement, { key: 'Enter' }); // No suggestion selected
 
         expect(clickSpy).not.toHaveBeenCalled();
-        expect(inputElement.value).toBe('test'); // Input value should remain 'test'
+        expect(inputElement).toHaveValue('test'); // Input value should remain 'test'
         expect(suggestionsListElement.children.length).toBe(1); // Suggestions should still be there
 
         clickSpy.mockRestore();
     });
 
     test('clearing input should clear suggestions and hide loading indicator', async () => {
-        apiService.getSuggestions.mockResolvedValueOnce(['suggestion1']);
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
-        openButtonElement.click();
-        inputElement.value = 'test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: '' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
-        expect(suggestionsListElement.children.length).toBe(1);
-        expect(jishoLoadingIndicatorElement.style.display).toBe('none');
-
-        inputElement.value = '';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
-
-        expect(suggestionsListElement.children.length).toBe(0);
-        expect(suggestionsListElement.style.display).toBe('none');
-        expect(jishoLoadingIndicatorElement.style.display).toBe('none');
+        expect(suggestionsListElement).toBeEmptyDOMElement();
+        expect(jishoLoadingIndicatorElement).not.toBeVisible();
     });
 
     test('error fetching suggestions should log error and hide loading indicator', async () => {
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         apiService.getSuggestions.mockRejectedValueOnce(new Error('API Error'));
 
-        openButtonElement.click();
-        inputElement.value = 'error_test';
-        inputElement.dispatchEvent(new Event('input'));
-        jest.advanceTimersByTime(1000);
-        await Promise.resolve();
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'error_test' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve();
+        });
 
         expect(apiService.getSuggestions).toHaveBeenCalledWith('error_test');
         expect(consoleErrorSpy).toHaveBeenCalledWith("Error fetching suggestions:", expect.any(Error));
-        expect(jishoLoadingIndicatorElement.style.display).toBe('none');
-        expect(suggestionsListElement.children.length).toBe(0);
+        expect(jishoLoadingIndicatorElement).not.toBeVisible();
+        expect(suggestionsListElement).toBeEmptyDOMElement();
 
         consoleErrorSpy.mockRestore();
     });

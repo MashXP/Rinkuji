@@ -62,6 +62,8 @@ This project is licensed under the GNU AGPLv3 License - see the [LICENSE](LICENS
 *   ~~**API Caching:** Introduce caching mechanisms in the backend for Jisho API calls to boost performance and minimize redundant requests.~~ (Implemented)
 *   ~~DEPLOYED~~
 *   **Design / Add Web icon**
+*   **Make it work on Mobile** (URGENT)
+*   **Increase test coverage**
 *   **Smooth Motion Animation**: Implement smoother motion animations for ***BEEEFIER*** PCs to enhance visual experience. ✨ AESTHETICZ ✨
 *   **Node Rearrangement**: Further work on node rearrangement algorithms for better graph layouts.
 *   **First-time User Tutorial**: Implement an interactive tutorial or "how to play" guide for new users.

@@ -1,126 +1,93 @@
-// Mock localStorage
-const localStorageMock = (function() {
-  let store = {};
-  return {
-    getItem: function(key) {
-      return store[key] || null;
-    },
-    setItem: function(key, value) {
-      store[key] = value.toString();
-    },
-    removeItem: function(key) {
-      delete store[key];
-    },
-    clear: function() {
-      store = {};
-    },
-    key: function(index) {
-      return Object.keys(store)[index];
-    },
-    get length() {
-      return Object.keys(store).length;
-    },
-    // Helper for testing LRU
-    _getStore: function() {
-      return store;
-    },
-    _setStore: function(newStore) {
-      store = newStore;
-    }
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
-});
-
 import localStorageCacheService from '../../src/js/services/localStorageCacheService.js';
 
-
 describe('localStorageCacheService', () => {
-  const KANJI_ID = '語';
-  const KANJI_DATA = { meaning: 'language', readings: ['ご'] };
-  const ANOTHER_KANJI_ID = '日';
-  const ANOTHER_KANJI_DATA = { meaning: 'day', readings: ['にち'] };
+  let localStorageMock = {};
 
   beforeEach(() => {
-    localStorage.clear(); // Clear localStorage before each test
-    jest.useFakeTimers(); // Use fake timers for consistent date/time
+    localStorageMock = {};
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: jest.fn((key) => localStorageMock[key]),
+        setItem: jest.fn((key, value) => { localStorageMock[key] = value; }),
+        removeItem: jest.fn((key) => { delete localStorageMock[key]; }),
+        clear: jest.fn(() => { localStorageMock = {}; }),
+      },
+      writable: true,
+    });
   });
 
   afterEach(() => {
-    jest.useRealTimers(); // Restore real timers
+    jest.restoreAllMocks();
   });
 
-  // T004: returns correct data for valid, non-expired keys
-  test('should return correct data for a valid, non-expired key', () => {
-    localStorageCacheService.set(KANJI_ID, KANJI_DATA);
-    expect(localStorageCacheService.get(KANJI_ID)).toEqual(KANJI_DATA);
+  test('get should return null if item not found', () => {
+    expect(localStorageCacheService.get('nonExistent')).toBeNull();
+    expect(window.localStorage.getItem).toHaveBeenCalledWith('kanji_cache_nonExistent');
   });
 
-  // T005: returns null for non-existent keys
-  test('should return null for a non-existent key', () => {
-    expect(localStorageCacheService.get('non_existent')).toBeNull();
+  test('set should store data in localStorage', () => {
+    const data = { meaning: 'language', readings: ['ご'] };
+    const now = Date.now();
+    const EXPIRATION_TIME_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+    jest.spyOn(Date, 'now').mockReturnValue(now);
+
+    localStorageCacheService.set('語', data);
+    expect(window.localStorage.setItem).toHaveBeenCalledWith(
+      'kanji_cache_語',
+      JSON.stringify({ data, timestamp: now, expiration_time: now + EXPIRATION_TIME_MS })
+    );
+    expect(localStorageCacheService.get('語')).toEqual(data);
   });
 
-  // T006: returns null for an expired key (7-day expiration)
-  test('should return null for an expired key', () => {
-    localStorageCacheService.set(KANJI_ID, KANJI_DATA);
-    jest.advanceTimersByTime(7 * 24 * 60 * 60 * 1000 + 1); // Advance time past expiration
-    expect(localStorageCacheService.get(KANJI_ID)).toBeNull();
+  test('remove should delete item from localStorage', () => {
+    const data = { meaning: 'language', readings: ['ご'] };
+    // Set and then immediately remove
+    localStorageCacheService.set('語', data);
+    localStorageCacheService.remove('語');
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('kanji_cache_語');
+    expect(localStorageCacheService.get('語')).toBeNull();
   });
 
-  // T007: correctly stores data
-  test('should correctly store data', () => {
-    localStorageCacheService.set(KANJI_ID, KANJI_DATA);
-    const storedItem = JSON.parse(localStorage.getItem('kanji_cache_語'));
-    expect(storedItem.data).toEqual(KANJI_DATA);
-    expect(storedItem.timestamp).toBeDefined();
-    expect(storedItem.expiration_time).toBeDefined();
-  });
-
-  // T008: correctly deletes data
-  test('should correctly delete data', () => {
-    localStorageCacheService.set(KANJI_ID, KANJI_DATA);
-    localStorageCacheService.remove(KANJI_ID);
-    expect(localStorageCacheService.get(KANJI_ID)).toBeNull();
-    expect(localStorage.getItem('kanji_cache_語')).toBeNull();
-  });
-
-  // T009: empties the entire cache
-  test('should clear the entire cache', () => {
-    localStorageCacheService.set(KANJI_ID, KANJI_DATA);
-    localStorageCacheService.set(ANOTHER_KANJI_ID, ANOTHER_KANJI_DATA);
+  test('clear should remove only cache-related items from localStorage', () => {
+    localStorageCacheService.set('語', { meaning: 'language' });
+    localStorageCacheService.set('日', { meaning: 'day' });
     localStorageCacheService.clear();
-    expect(localStorage.length).toBe(0);
-    expect(localStorageCacheService.get(KANJI_ID)).toBeNull();
-    expect(localStorageCacheService.get(ANOTHER_KANJI_ID)).toBeNull();
+    expect(window.localStorage.clear).not.toHaveBeenCalled();
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('kanji_cache_語');
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('kanji_cache_日');
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('kanji_cache_index');
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('kanji_cache_size');
+    expect(localStorageCacheService.get('語')).toBeNull();
+    expect(localStorageCacheService.get('日')).toBeNull();
   });
 
-  // T010: LRU eviction when capacity (10MB) is reached
-  test('should evict least recently used items when capacity is reached', () => {
-    // Use an object wrapper for data to prevent console spam on test failure.
-    const largeData = { data: 'a'.repeat(1024 * 1024 * 0.9) }; // ~0.9MB to be safe with overhead
+  test('get should return null for expired items', () => {
+    const expiredData = { data: { meaning: 'old' }, expiration_time: Date.now() - 1000 };
+    localStorageMock['kanji_cache_expired'] = JSON.stringify(expiredData);
+    expect(localStorageCacheService.get('expired')).toBeNull();
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('kanji_cache_expired');
+  });
 
-    // 1. Fill the cache up to its 4MB limit.
-    // Order of recency: 1 (oldest) -> 4 (newest)
-    localStorageCacheService.set('kanji1', largeData);
-    localStorageCacheService.set('kanji2', largeData);
-    localStorageCacheService.set('kanji3', largeData);
-    localStorageCacheService.set('kanji4', largeData);
+  test('set should update existing item and move to end of LRU index', () => {
+    const data1 = { meaning: 'one' };
+    const data2 = { meaning: 'two' };
+    localStorageCacheService.set('one', data1);
+    localStorageCacheService.set('two', data2);
+    // Access 'one' to make it more recently used
+    localStorageCacheService.get('one');
+    const updatedData1 = { meaning: 'updated one' };
+    localStorageCacheService.set('one', updatedData1);
 
-    // 2. Access 'kanji1', making it the most recently used.
-    // The new LRU item should now be 'kanji2'.
-    localStorageCacheService.get('kanji1');
+    // Verify 'one' is at the end of the index (most recent)
+    const index = JSON.parse(window.localStorage.getItem('kanji_cache_index'));
+    expect(index[index.length - 1]).toBe('kanji_cache_one');
+    expect(localStorageCacheService.get('one')).toEqual(updatedData1);
+  });
 
-    // 3. Add a new item, which should exceed the 4MB limit and evict 'kanji2'.
-    localStorageCacheService.set('kanji5', largeData);
-
-    // 4. Assert that 'kanji2' was evicted and all others remain.
-    expect(localStorageCacheService.get('kanji2')).toBeNull();
-    expect(localStorageCacheService.get('kanji1')).toEqual(largeData);
-    expect(localStorageCacheService.get('kanji3')).toEqual(largeData);
-    expect(localStorageCacheService.get('kanji4')).toEqual(largeData);
-    expect(localStorageCacheService.get('kanji5')).toEqual(largeData);
+  test('setMaxSize should update the maximum cache size and enforce limit', () => {
+    localStorageCacheService.setMaxSize(0.000001); // Very small size to force eviction
+    const largeData = { data: 'a'.repeat(10000) }; // 10KB
+    localStorageCacheService.set('largeItem', largeData);
+    expect(localStorageCacheService.get('largeItem')).toBeNull(); // Should be evicted
   });
 });

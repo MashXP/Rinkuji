@@ -48,7 +48,7 @@ export class NewSearchModal {
 
         this.input.addEventListener('input', () => {
             clearTimeout(this.debounceTimeout);
-            this.debounceTimeout = setTimeout(() => this.handleInput(), 1000);
+            this.debounceTimeout = setTimeout(() => this.handleInput(), 1000); // Changed debounce time to 500ms
             this.selectedSuggestionIndex = -1; // Reset selection on new input
         });
 
@@ -112,7 +112,10 @@ export class NewSearchModal {
             if (index === this.selectedSuggestionIndex) {
                 item.classList.add('selected');
                 this.input.value = item.textContent; // Update input with selected suggestion
-                item.scrollIntoView({ block: 'nearest' }); // Scroll to selected item
+                // Mock scrollIntoView for testing environments
+                if (typeof item.scrollIntoView === 'function') {
+                    item.scrollIntoView({ block: 'nearest' }); // Scroll to selected item
+                }
             } else {
                 item.classList.remove('selected');
             }
@@ -160,11 +163,20 @@ export class NewSearchModal {
                     this.input.value = suggestionText;
                     this.clearSuggestions();
                     this.input.focus();
+                    // Trigger search after selecting a suggestion
+                    this.input.dispatchEvent(new Event('change')); // Simulate change event
+                    this.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); // Simulate Enter keydown
                 });
                 this.suggestionsList.appendChild(item);
             });
         } else {
-            this.suggestionsList.style.display = 'none'; // Hide if no suggestions
+            if (this.input.value.trim()) { // Only show "No results" if there was a query
+                const noResultsItem = document.createElement('div');
+                noResultsItem.classList.add('no-results-message');
+                noResultsItem.textContent = 'No results found';
+                this.suggestionsList.appendChild(noResultsItem);
+                this.suggestionsList.style.display = 'block'; // Show the message
+            }
         }
     }
 

@@ -2,16 +2,25 @@
 
 ### Running Tests
 
-To run the frontend tests, navigate to the `frontend` directory and use the following commands:
+#### Frontend Tests
 
-*   **Run all tests:**
+1.  **Navigate to the frontend directory:**
     ```bash
-    ./node_modules/.bin/jest
+    cd frontend
     ```
-*   **Run tests with coverage:**
+2.  **Install dependencies (if not already installed):**
     ```bash
-    ./node_modules/.bin/jest --coverage
+    npm install
     ```
+3.  **Run tests:**
+    *   **Run all tests:**
+        ```bash
+        npm test
+        ```
+    *   **Run tests with coverage:**
+        ```bash
+        npm test -- --coverage
+        ```
 
 #### Backend Tests
 
@@ -25,3 +34,19 @@ To run the backend tests, ensure you are in the project root directory and use t
     ```bash
     cd backend && pytest
     ```
+
+### Running the Application Locally
+
+To run the application locally, follow these steps:
+
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd backend
+    ```
+2.  **Install dependencies (if not already installed):**
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  **Run the Flask application:**
+    ```bash
+    export FLASK_APP=backend/app.py && flask run --debug

@@ -29,7 +29,7 @@ describe('Integration: Context Menu Functionality', () => {
         document.body.innerHTML = `
             <div id="viewport"></div>
             <canvas id="canvas"></canvas>
-            <div id="wordContainer" data-word="" data-word-slug=""></div>
+            <div id="rinkuWord" data-word="" data-word-slug=""></div>
             <svg id="svgLayer"></svg>
             <div id="nodesContainer"></div>
             <div id="parentKanjiSidebar"></div>
@@ -57,7 +57,7 @@ describe('Integration: Context Menu Functionality', () => {
 
         viewport = document.getElementById('viewport');
         canvas = document.getElementById('canvas');
-        wordContainer = document.getElementById('wordContainer');
+        wordContainer = document.getElementById('rinkuWord');
         svgLayer = document.getElementById('svgLayer');
         nodesContainer = document.getElementById('nodesContainer');
         parentKanjiSidebar = document.getElementById('parentKanjiSidebar');
@@ -197,5 +197,82 @@ describe('Integration: Context Menu Functionality', () => {
         // Simulate click on document body (outside menu)
         document.body.click();
         expect(nodeContextMenu.style.display).toBe('none');
+    });
+
+    test('context menu should trigger rerandomize action and update nodes', async () => {
+        // In the beforeEach, we expanded '日' with 2 words.
+        // For this test, we need to re-run an expansion with more words to enable the randomize option.
+        nodesContainer.innerHTML = '';
+        svgLayer.innerHTML = '';
+        global.fetch.mockClear();
+
+        // Perform a full reset of the graph's initial state for this specific test
+        // to avoid state leakage from the beforeEach block.
+        wordContainer.innerHTML = '';
+        wordContainer._children = [];
+        rinkuGraph.expandedElements.clear(); // Clear the set of expanded elements
+        rinkuGraph.kanjiSidebar.parentKanjiMap.clear();
+
+        // Re-create the initial kanji span for the test
+        const kanjiSpan = document.createElement('span');
+        kanjiSpan.textContent = '日';
+        kanjiSpan.classList.add('kanji-char');
+        wordContainer.appendChild(kanjiSpan);
+        rinkuGraph._addKanjiEventListeners(kanjiSpan);
+
+        // 1. Mock initial expansion with >3 words to enable the randomize option
+        const initialExpansionResponse = {
+            data: [
+                { slug: '休日', meaning: 'holiday' },
+                { slug: '毎日', meaning: 'every day' },
+                { slug: '日曜日', meaning: 'sunday' },
+                { slug: '本日', meaning: 'today' } // 4th word
+            ]
+        };
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(initialExpansionResponse),
+        });
+
+        // 2. Expand the node
+        await rinkuGraph.handleKanjiClick({ currentTarget: kanjiSpan });
+        expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(3);
+        expect(kanjiSpan.dataset.hasMoreWords).toBe('true');
+
+        // 3. Right-click the source kanji to show the context menu
+        const contextMenuEvent = new MouseEvent('contextmenu', { bubbles: true });
+        kanjiSpan.dispatchEvent(contextMenuEvent);
+
+        // 4. Mock the fetch call for the rerandomize action
+        const rerandomizeResponse = {
+            data: [
+                { slug: '日本', meaning: 'japan' },
+                { slug: '平日', meaning: 'weekday' },
+            ]
+        };
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(rerandomizeResponse),
+        });
+
+        // 5. Find and click the "Randomize Children" menu item
+        const randomizeMenuItem = nodeContextMenu.querySelector('[data-action="randomize"]');
+        expect(randomizeMenuItem).not.toBeNull();
+        expect(randomizeMenuItem.style.display).toBe('block');
+ 
+        // 6. Click the "Randomize Children" menu item and wait for the async operation
+        const rerandomizeSpy = jest.spyOn(rinkuGraph, 'rerandomizeNode');
+        randomizeMenuItem.click();
+        await rerandomizeSpy.mock.results[0].value; // Wait for the promise from rerandomizeNode to resolve
+
+        // 7. Assert that the DOM has been updated with the new nodes
+        // The original 3 nodes should be removed as they were unexpanded
+        expect(nodesContainer.querySelector('[data-word-slug="休日"]')).toBeNull();
+        expect(nodesContainer.querySelector('[data-word-slug="毎日"]')).toBeNull();
+        expect(nodesContainer.querySelector('[data-word-slug="日曜日"]')).toBeNull();
+        // The new 2 nodes from the rerandomize response should be present
+        expect(nodesContainer.querySelector('[data-word-slug="日本"]')).not.toBeNull();
+        expect(nodesContainer.querySelector('[data-word-slug="平日"]')).not.toBeNull();
+        expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(2);
     });
 });

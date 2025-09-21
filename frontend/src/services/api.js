@@ -101,3 +101,22 @@ export async function getGraphData(word) {
         return null;
     }
 }
+
+export async function searchWord(wordSlug) {
+    if (!wordSlug) {
+        return null;
+    }
+    try {
+        const response = await fetch(`/search_words?query=${encodeURIComponent(wordSlug)}`);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        const data = await response.json();
+        // Find the exact match for the slug
+        const result = data.data ? data.data.find(item => item.slug === wordSlug) : null;
+        return result;
+    } catch (error) {
+        console.error(`Failed to fetch word '${wordSlug}':`, error);
+        return null;
+    }
+}

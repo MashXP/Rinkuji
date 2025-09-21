@@ -1,58 +1,58 @@
-import { MeaningDisplayManager } from '../../src/js/managers/MeaningDisplayManager.js';
-import localStorageCacheService from '../../src/js/services/localStorageCacheService.js';
+import { MeaningDisplayManager } from '@app/managers/MeaningDisplayManager.js';
+import localStorageCacheService from '@app/services/localStorageCacheService.js';
+import * as apiService from '@app/services/api.js'; // Changed import path
 
-// Mock the DOM elements that MeaningDisplayManager interacts with
-const mockMeaningBarElement = {
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
-  },
-  innerHTML: '',
-};
+jest.mock('@app/services/api.js');
 
-describe('Cache Hit Scenario', () => {
-  const KANJI_ID = '語';
-  const KANJI_DATA = { slug: KANJI_ID, japanese: [{ reading: 'ご' }], senses: [{ english_definitions: ['language'] }] };
-  const CACHE_PREFIX = 'kanji_cache_';
+describe('MeaningDisplayManager - Cache Hit', () => {
+    let mockMeaningBarElement;
+    let localStorageMock;
 
-  let meaningDisplayManager;
+    beforeEach(() => {
+        localStorageMock = {};
+        Object.defineProperty(window, 'localStorage', {
+            value: {
+                getItem: jest.fn((key) => localStorageMock[key]),
+                setItem: jest.fn((key, value) => { localStorageMock[key] = value; }),
+                removeItem: jest.fn((key) => { delete localStorageMock[key]; }),
+                clear: jest.fn(() => { localStorageMock = {}; }),
+            },
+            writable: true,
+        });
 
-  beforeEach(() => {
-    localStorage.clear(); // Clear localStorage before each test
-    jest.useFakeTimers(); // Use fake timers for consistent date/time
+        mockMeaningBarElement = document.createElement('div'); // Use a real DOM element
+        localStorageCacheService.clear();
+        apiService.searchWord.mockClear();
+        jest.useFakeTimers(); // Use fake timers
+    });
 
-    // Initialize MeaningDisplayManager
-    meaningDisplayManager = new MeaningDisplayManager(mockMeaningBarElement);
+    afterEach(() => {
+        jest.useRealTimers(); // Restore real timers
+    });
 
-    // Mock global fetch
-    global.fetch = jest.fn().mockImplementation(() => Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({ data: [] }), // Return empty data for mock
-    }));
+    test('should serve from cache if data is present', async () => {
+        const wordSlug = 'cached-word';
+        const cachedData = {
+            slug: wordSlug,
+            japanese: [{ reading: 'キャッシュワード' }],
+            senses: [{ english_definitions: ['a cached test word'] }]
+        };
+        localStorageCacheService.set(wordSlug, cachedData);
 
-    // Spy on displayResult to check if it's called with cached data
-    jest.spyOn(meaningDisplayManager, 'displayResult');
-  });
+        const manager = new MeaningDisplayManager(mockMeaningBarElement);
+        await manager.showMeaning(wordSlug);
+        jest.runAllTimers(); // Advance timers for debounce
 
-  afterEach(() => {
-    jest.useRealTimers(); // Restore real timers
-    jest.restoreAllMocks(); // Restore all mocks
-  });
+        expect(apiService.searchWord).not.toHaveBeenCalled(); // Should not call API
+        expect(mockMeaningBarElement.innerHTML).toContain('a cached test word');
+    });
 
-  test('should display Kanji info from cache without API call on subsequent access', async () => {
-    // Pre-populate cache with data
-    localStorageCacheService.set(KANJI_ID, KANJI_DATA);
+    test('should not call API if wordSlug is empty', async () => {
+        const manager = new MeaningDisplayManager(mockMeaningBarElement);
+        await manager.showMeaning('');
+        jest.runAllTimers(); // Advance timers for debounce
 
-    // Call showMeaning, simulating a user action
-    await meaningDisplayManager.showMeaning(KANJI_ID);
-
-    // Expect fetch not to have been called
-    expect(global.fetch).not.toHaveBeenCalled();
-
-    // Expect displayResult to have been called with the cached data
-    expect(meaningDisplayManager.displayResult).toHaveBeenCalledWith(KANJI_DATA);
-
-    // Optionally, assert on the innerHTML of the meaningBar
-    expect(mockMeaningBarElement.innerHTML).toContain('language');
-  });
+        expect(apiService.searchWord).not.toHaveBeenCalled();
+        expect(mockMeaningBarElement.innerHTML).not.toContain('Loading');
+    });
 });

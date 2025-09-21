@@ -185,6 +185,15 @@ describe('NewSearchModal', () => {
         itemClickSpy.mockRestore();
     });
 
+    test('renderSuggestions should display "No results found" for empty suggestions when there is a query', () => {
+        inputElement.value = 'some query'; // Set a query
+        newSearchModal.renderSuggestions([]);
+
+        expect(suggestionsListElement.children.length).toBe(1);
+        expect(suggestionsListElement.children[0].textContent).toBe('No results found');
+        expect(suggestionsListElement.style.display).toBe('block');
+    });
+
     test('clearSuggestions should empty the list and hide it', () => {
         suggestionsListElement.innerHTML = '<div class="suggestion-item">test</div>';
         suggestionsListElement.style.display = 'block';

@@ -1,1 +1,38 @@
-[]
+[
+    {
+        "id": 1,
+        "text": "日本語",
+        "reading": "にほんご",
+        "meaning": "Japanese language",
+        "kanji_components": [
+            {
+                "id": 101,
+                "character": "日",
+                "meaning": "day, sun, Japan",
+                "on_reading": ["ニチ", "ジツ"],
+                "kun_reading": ["ひ", "-び", "-か"]
+            },
+            {
+                "id": 102,
+                "character": "本",
+                "meaning": "book, present, main, true, real, counter for long cylindrical things",
+                "on_reading": ["ホン"],
+                "kun_reading": ["もと"]
+            },
+            {
+                "id": 103,
+                "character": "語",
+                "meaning": "word, speech, language",
+                "on_reading": ["ゴ"],
+                "kun_reading": ["かた.る", "かた.らう"]
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "text": "begin",
+        "reading": "begin",
+        "meaning": "start",
+        "kanji_components": []
+    }
+]

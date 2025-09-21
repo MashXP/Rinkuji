@@ -6,8 +6,8 @@ def test_get_graph_for_word(client):
     assert response.status_code == 200
     data = response.get_json()
     assert "nodes" in data
-    assert "links" in data
-    assert any(node["id"] == "word-1" for node in data["nodes"])
+    assert "edges" in data
+    assert any(node["id"] == 1 for node in data["nodes"])
 
 def test_get_graph_for_nonexistent_word(client):
     response = client.get("/graph?word=nonexistent")
@@ -20,7 +20,7 @@ def test_get_kanji_details(client):
     assert response.status_code == 200
     data = response.get_json()
     assert data["character"] == "日"
-    assert data["meaning"] == "day, sun"
+    assert data["meaning"] == "day, sun, Japan"
 
 def test_get_kanji_details_nonexistent(client):
     response = client.get("/kanji_details?character=nonexistent")

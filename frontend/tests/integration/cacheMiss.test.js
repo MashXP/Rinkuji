@@ -1,65 +1,84 @@
-import { MeaningDisplayManager } from '../../src/js/managers/MeaningDisplayManager.js';
-import localStorageCacheService from '../../src/js/services/localStorageCacheService.js';
+import { MeaningDisplayManager } from '@app/managers/MeaningDisplayManager.js';
+import localStorageCacheService from '@app/services/localStorageCacheService.js';
+import * as apiService from '@app/services/api.js';
 
-// Mock the DOM elements that MeaningDisplayManager interacts with
-const mockMeaningBarElement = {
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
-  },
-  innerHTML: '',
-};
+jest.mock('@app/services/api.js');
 
-describe('Cache Miss Scenario', () => {
-  const KANJI_ID = '日';
-  const KANJI_DATA_FROM_API = { slug: KANJI_ID, japanese: [{ reading: 'にち' }], senses: [{ english_definitions: ['day'] }] };
-  const CACHE_PREFIX = 'kanji_cache_';
+describe('MeaningDisplayManager - Cache Miss', () => {
+    let mockMeaningBarElement;
+    let localStorageMock;
 
-  let meaningDisplayManager;
+    beforeEach(() => {
+        localStorageMock = {};
+        Object.defineProperty(window, 'localStorage', {
+            value: {
+                getItem: jest.fn((key) => localStorageMock[key]),
+                setItem: jest.fn((key, value) => { localStorageMock[key] = value; }),
+                removeItem: jest.fn((key) => { delete localStorageMock[key]; }),
+                clear: jest.fn(() => { localStorageMock = {}; }),
+            },
+            writable: true,
+        });
 
-  beforeEach(() => {
-    localStorage.clear(); // Clear localStorage before each test
-    jest.useFakeTimers(); // Use fake timers for consistent date/time
+        mockMeaningBarElement = document.createElement('div'); // Use a real DOM element
+        localStorageCacheService.clear();
+        apiService.searchWord.mockClear();
+        jest.useFakeTimers(); // Use fake timers
+    });
 
-    // Initialize MeaningDisplayManager
-    meaningDisplayManager = new MeaningDisplayManager(mockMeaningBarElement);
+    afterEach(() => {
+        jest.useRealTimers(); // Restore real timers
+    });
 
-    // Mock global fetch
-    global.fetch = jest.fn().mockImplementation(() => Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({ data: [KANJI_DATA_FROM_API] }), // Return mock data
-    }));
+    test('should fetch from API and cache if data is not in cache', async () => {
+        const wordSlug = 'test-word';
+        const mockApiData = { // Corrected mockApiData structure
+            slug: wordSlug,
+            japanese: [{ reading: 'テストワード' }],
+            senses: [{ english_definitions: ['a test word'] }]
+        };
+        apiService.searchWord.mockResolvedValue(mockApiData);
 
-    // Spy on displayResult to check if it's called with fetched data
-    jest.spyOn(meaningDisplayManager, 'displayResult');
-  });
+        const manager = new MeaningDisplayManager(mockMeaningBarElement);
+        await manager.showMeaning(wordSlug);
+        jest.runAllTimers(); // Advance timers for debounce
 
-  afterEach(() => {
-    jest.useRealTimers(); // Restore real timers
-    jest.restoreAllMocks(); // Restore all mocks
-  });
+        expect(localStorageCacheService.get(wordSlug)).toEqual(mockApiData); // Corrected assertion
+        expect(apiService.searchWord).toHaveBeenCalledWith(wordSlug);
+        expect(mockMeaningBarElement.innerHTML).toContain('a test word');
+    });
 
-  test('should make API call and cache data when Kanji info is not in cache or expired', async () => {
-    // Ensure localStorage is empty (cache miss)
-    localStorage.clear();
+    test('should display "No definition found" if API returns no data', async () => {
+        const wordSlug = 'no-data-word';
+        apiService.searchWord.mockResolvedValue(null); // Corrected mock resolved value
 
-    // Call showMeaning, simulating a user action
-    await meaningDisplayManager.showMeaning(KANJI_ID);
+        const manager = new MeaningDisplayManager(mockMeaningBarElement);
+        await manager.showMeaning(wordSlug);
+        jest.runAllTimers(); // Advance timers for debounce
 
-    // Expect fetch to have been called
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(global.fetch).toHaveBeenCalledWith(`/search_words?query=${encodeURIComponent(KANJI_ID)}`);
+        expect(localStorageCacheService.get(wordSlug)).toBeNull();
+        expect(apiService.searchWord).toHaveBeenCalledWith(wordSlug);
+        expect(mockMeaningBarElement.innerHTML).toContain('No definition found');
+    });
 
-    // Expect displayResult to have been called with the fetched data
-    expect(meaningDisplayManager.displayResult).toHaveBeenCalledWith(KANJI_DATA_FROM_API);
+    test('should display error message if API call fails', async () => {
+        const wordSlug = 'error-word';
+        // Mock console.error to prevent logging during this test and check if it's called.
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    // Assert that the data is now in localStorage
-    const storedItem = JSON.parse(localStorage.getItem(CACHE_PREFIX + KANJI_ID));
-    expect(storedItem).toBeDefined();
-    expect(storedItem.data).toEqual(KANJI_DATA_FROM_API);
-    expect(storedItem.expiration_time).toBeDefined();
+        apiService.searchWord.mockRejectedValue(new Error('API error'));
 
-    // Optionally, assert on the innerHTML of the meaningBar
-    expect(mockMeaningBarElement.innerHTML).toContain('day');
-  });
+        const manager = new MeaningDisplayManager(mockMeaningBarElement);
+        await manager.showMeaning(wordSlug);
+        jest.runAllTimers(); // Advance timers for debounce
+
+        // Assert that the error was handled correctly
+        expect(localStorageCacheService.get(wordSlug)).toBeNull();
+        expect(apiService.searchWord).toHaveBeenCalledWith(wordSlug);
+        expect(mockMeaningBarElement.innerHTML).toContain('Error loading definition');
+        expect(consoleErrorSpy).toHaveBeenCalled();
+
+        // Restore original console.error
+        consoleErrorSpy.mockRestore();
+    });
 });

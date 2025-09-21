@@ -1,5 +1,5 @@
-// d:/Rinkuji/static/MeaningDisplayManager.js
-import localStorageCacheService from '../services/localStorageCacheService.js'; // Import the cache service
+import localStorageCacheService from '../services/localStorageCacheService.js';
+import { searchWord } from '../../services/api.js';
 
 export class MeaningDisplayManager {
     constructor(meaningBarElement) {
@@ -10,7 +10,9 @@ export class MeaningDisplayManager {
     }
 
     async showMeaning(wordSlug) {
-        if (!this.meaningBar || !wordSlug) return;
+        if (!this.meaningBar || !wordSlug) {
+            return;
+        }
 
         this.meaningBar.classList.add('visible');
         this.meaningBar.innerHTML = `<p>Loading definition for ${wordSlug}...</p>`;
@@ -19,18 +21,12 @@ export class MeaningDisplayManager {
             // 1. Check cache first
             const cachedData = localStorageCacheService.get(wordSlug);
             if (cachedData) {
-                console.log(`MeaningDisplayManager: Serving '${wordSlug}' from cache.`);
                 this.displayResult(cachedData);
                 return; // Exit if data found in cache
             }
 
-            console.log(`MeaningDisplayManager: Fetching '${wordSlug}' from API.`);
-            const response = await fetch(`/search_words?query=${encodeURIComponent(wordSlug)}`);
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-            const data = await response.json();
-            const result = data.data.find(item => item.slug === wordSlug);
+            // Use apiService.searchWord instead of fetch
+            const result = await searchWord(wordSlug);
 
             if (result) {
                 // 2. Store data in cache after successful API call
@@ -49,12 +45,10 @@ export class MeaningDisplayManager {
         const MAX_SENSES_TO_DISPLAY = 3;
         const word = result.slug;
 
-        // Get unique readings and join with a line break
         const readingsArray = result.japanese.map(jp => jp.reading).filter(Boolean);
         const uniqueReadings = [...new Set(readingsArray)];
         const readings = uniqueReadings.join('<br>');
 
-        // Get up to 3 senses, prepend a bullet, and join with a line break
         const sensesToDisplay = result.senses.slice(0, MAX_SENSES_TO_DISPLAY);
         const meanings = sensesToDisplay.map(sense => '&bull; ' + sense.english_definitions.join(', ')).join('<br>');
 
