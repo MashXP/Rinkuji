@@ -81,6 +81,7 @@ def create_app():
     
     return app
 
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app() # Call create_app to get the app instance
     app.run(debug=True)

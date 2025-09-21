@@ -7,7 +7,7 @@ suggestions_bp = Blueprint('suggestions', __name__)
 # Load data.json once when the blueprint is created
 def load_data():
     script_dir = os.path.dirname(__file__)
-    data_path = os.path.join(script_dir, '..\..\data.json') # Corrected path
+    data_path = os.path.abspath(os.path.join(script_dir, '..', '..', 'data.json'))
     try:
         with open(data_path, 'r', encoding='utf-8') as f:
             return json.load(f)
