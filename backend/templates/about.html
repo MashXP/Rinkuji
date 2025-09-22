@@ -67,6 +67,13 @@
             </p>
         </section>
 
+        <section class="about-section" id="changelog-section">
+            <h2>Changelog</h2>
+            <div id="changelog-container">
+                <p>Loading changelog...</p>
+            </div>
+        </section>
+
         <section class="about-section">
             <h2>Acknowledgements</h2>
             <p>
@@ -116,5 +123,7 @@
         </section>
 
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='js/about.js') }}"></script>
 </body>
 </html>

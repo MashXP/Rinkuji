@@ -5,6 +5,9 @@ jest.mock('../../src/js/components/OptionsMenu.js');
 jest.mock('../../src/js/components/NewSearchModal.js');
 jest.mock('../../src/js/managers/UITogglingManager.js');
 
+// Mock fetch globally for the changelog API call
+global.fetch = jest.fn();
+
 describe('main.js initialization', () => {
     let mockViewport;
     let mockCanvas;
@@ -35,6 +38,12 @@ describe('main.js initialization', () => {
     beforeEach(() => {
         jest.resetModules(); // Reset module registry before each test
         jest.clearAllMocks(); // Clear all mocks, including their call counts and instances
+
+        // Provide a default mock implementation for fetch
+        fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ changelog: '## [1.0.3]' }),
+        });
 
         // Reset the DOM before each test
         document.body.innerHTML = `

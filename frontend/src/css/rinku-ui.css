@@ -780,3 +780,22 @@
 .loading-indicator i {
     margin-right: 10px;
 }
+
+.version-display {
+    font-size: 0.8em;
+    color: #bdc3c7;
+    text-align: center;
+    margin-top: auto; /* Pushes it to the bottom */
+    padding-top: 10px;
+    border-top: 1px solid #4a627a;
+}
+
+.version-display a {
+    color: inherit; /* Inherit color from parent */
+    text-decoration: none; /* Remove underline */
+    cursor: pointer;
+}
+
+.version-display a:hover {
+    color: var(--highlight-color); /* Change color on hover */
+}

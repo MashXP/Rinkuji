@@ -11,6 +11,8 @@ from backend.src.services.graph_service import GraphService
 from backend.src.services.jisho_service import JishoService
 from backend.src.api.graph import graph_bp # Import the blueprint
 from backend.src.api.suggestions import suggestions_bp # Import the suggestions blueprint
+from backend.src.api.changelog import changelog_bp # Import the changelog blueprint
+from backend.src.services import github_service
 
 def create_app():
     app = Flask(__name__, static_folder='../frontend/src', template_folder='templates')
@@ -25,6 +27,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(graph_bp) # Register the graph blueprint here
     app.register_blueprint(suggestions_bp) # Register the suggestions blueprint here
+    app.register_blueprint(changelog_bp) # Register the changelog blueprint here
 
     @app.route('/')
     def index(): # The main page is now the Rinku visualization
@@ -33,10 +36,34 @@ def create_app():
         Takes an optional 'word' query parameter for the search.
         """
         word = request.args.get('word', '')
-        return render_template('rinku.html', word=word)
+        
+        # Fetch changelog and extract latest version
+        changelog_md = github_service.get_changelog_from_github()
+        latest_version_display = "null"
+        if changelog_md:
+            lines = changelog_md.split('\n')
+            for line in lines:
+                if line.startswith('## '):
+                    # Example: "## Version 1.0.0 - 2025-09-22"
+                    version_info = line.replace('## ', '').strip()
+                    # Split by " - " to separate version and date
+                    parts = version_info.split(' - ', 1)
+                    if len(parts) == 2:
+                        version_num = parts[0].strip().replace('[', '').replace(']', '') # Removed square brackets
+                        print(f"DEBUG: version_num before formatting: {parts[0].strip()}")
+                        print(f"DEBUG: version_num after stripping brackets: {version_num}")
+                        # version_date = parts[1].strip() # No need for date
+                        latest_version_display = f"ver.{version_num}" # Changed to ver.1.0.3 format
+                        print(f"DEBUG: latest_version_display: {latest_version_display}")
+                    else:
+                        latest_version_display = f"ver.{version_info}" # Fallback if format is unexpected
+                    break
+        
+        return render_template('rinku.html', word=word, latest_version=latest_version_display)
 
     @app.route('/search_words')
     def search_words():
+
         """
         An API endpoint that proxies search requests to the Jisho.org API.
         It takes a 'query' parameter from the request URL.

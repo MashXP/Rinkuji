@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const parentKanjiSidebar = document.getElementById('parentKanjiSidebar');
     const parentKanjiSearchInput = document.getElementById('parentKanjiSearch');
     const parentKanjiListContainer = document.getElementById('parentKanjiList');
+    const rinkuVersionDisplay = document.getElementById('rinku-version-display'); // New element
 
     // Sidebar Toggle Button
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
@@ -122,4 +123,57 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!wordParam && searchModal) {
         searchModal.show();
     }
+
+    // Fetch and display latest version
+    fetch('/api/changelog')
+        .then(response => response.json())
+        .then(data => {
+            if (data.changelog && rinkuVersionDisplay) {
+                const changelogMarkdown = data.changelog;
+                const entries = parseChangelog(changelogMarkdown);
+                if (entries.length > 0) {
+                    const versionInfo = entries[0].title; // e.g., "Version 1.0.0 - 2025-09-22"
+                    const parts = versionInfo.split(' - ', 1);
+                    let formattedVersion = "null";
+                    if (parts.length === 2) {
+                        const versionNum = parts[0].trim();
+                        // const versionDate = parts[1].trim(); // No need for date
+                        formattedVersion = `${versionNum}`;
+                    } else {
+                        formattedVersion = versionInfo; // Fallback if format is unexpected
+                    }
+                    rinkuVersionDisplay.textContent = formattedVersion;
+                } else {
+                    rinkuVersionDisplay.textContent = 'null';
+                }
+            } else if (rinkuVersionDisplay) {
+                rinkuVersionDisplay.textContent = 'null';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching changelog for version display:', error);
+            if (rinkuVersionDisplay) {
+                rinkuVersionDisplay.textContent = 'err';
+            }
+        });
 });
+
+function parseChangelog(markdown) {
+    const entries = [];
+    const sections = markdown.split(/(?=^## )/m);
+
+    for (let i = 0; i < sections.length; i++) {
+        const section = sections[i].trim();
+        if (section.startsWith('## ')) {
+            const lines = section.split('\n');
+            const titleLine = lines[0];
+            const versionMatch = titleLine.match(/^##\s*(.+)/);
+            if (versionMatch) {
+                const versionTitle = versionMatch[1].trim();
+                const content = lines.slice(1).join('\n').trim();
+                entries.push({ title: versionTitle, markdown: content });
+            }
+        }
+    }
+    return entries;
+}
