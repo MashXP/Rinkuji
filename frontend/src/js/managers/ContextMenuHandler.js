@@ -46,8 +46,8 @@ export class ContextMenuHandler {
             this.activeContextMenuKanji = targetKanji && targetNode.contains(targetKanji) ? targetKanji : null;
 
             // Position the context menu
-            this.nodeContextMenu.style.left = `${e.clientX}px`;
-            this.nodeContextMenu.style.top = `${e.clientY}px`;
+            this.nodeContextMenu.style.left = `${clientX}px`;
+            this.nodeContextMenu.style.top = `${clientY}px`;
             this.nodeContextMenu.style.display = 'block';
 
             // Update Collapse/Expand button visibility
@@ -172,7 +172,7 @@ export class ContextMenuHandler {
         document.addEventListener('click', this.hideContextMenu.bind(this));
 
         // Touch events for long press
-        document.addEventListener('touchstart', this.handleTouchStart.bind(this));
+        document.addEventListener('touchstart', this.handleTouchStart.bind(this), true);
         document.addEventListener('touchend', this.handleTouchEnd.bind(this));
         document.addEventListener('touchmove', this.handleTouchMove.bind(this));
     }

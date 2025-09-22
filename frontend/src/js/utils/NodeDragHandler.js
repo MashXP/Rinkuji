@@ -25,10 +25,11 @@ export class NodeDragHandler {
         this._dragOccurred = false; // Flag to track if movement exceeded the threshold.
         this.dragThreshold = 5; // Min pixels moved to be considered a drag.
 
-        this.initialTouchX = 0;
-        this.initialTouchY = 0;
-        this.lastTouchX = 0;
-        this.lastTouchY = 0;
+        // Bind event handlers once to ensure they can be removed correctly.
+        this.boundHandleMouseMove = this.handleMouseMove.bind(this);
+        this.boundHandleMouseUpOrLeave = this.handleMouseUpOrLeave.bind(this);
+        this.boundHandleTouchMove = this.handleTouchMove.bind(this);
+        this.boundHandleTouchEnd = this.handleTouchEnd.bind(this);
     }
 
     /**
@@ -62,9 +63,9 @@ export class NodeDragHandler {
         this.lastY = canvasCoords.uy;
 
         // Add global touchmove and touchend listeners
-        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-        document.addEventListener('touchend', this.handleTouchEnd.bind(this));
-        document.addEventListener('touchcancel', this.handleTouchEnd.bind(this));
+        document.addEventListener('touchmove', this.boundHandleTouchMove, { passive: false });
+        document.addEventListener('touchend', this.boundHandleTouchEnd);
+        document.addEventListener('touchcancel', this.boundHandleTouchEnd);
     }
 
     /**
@@ -117,9 +118,9 @@ export class NodeDragHandler {
         this.activeNode = null;
 
         // Remove global touchmove and touchend listeners
-        document.removeEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-        document.removeEventListener('touchend', this.handleTouchEnd.bind(this));
-        document.removeEventListener('touchcancel', this.handleTouchEnd.bind(this));
+        document.removeEventListener('touchmove', this.boundHandleTouchMove);
+        document.removeEventListener('touchend', this.boundHandleTouchEnd);
+        document.removeEventListener('touchcancel', this.boundHandleTouchEnd);
     }
 
     /**
@@ -142,9 +143,9 @@ export class NodeDragHandler {
         this.lastY = canvasCoords.uy;
 
         // Add global mousemove and mouseup listeners
-        document.addEventListener('mousemove', this.handleMouseMove.bind(this));
-        document.addEventListener('mouseup', this.handleMouseUpOrLeave.bind(this));
-        document.addEventListener('mouseleave', this.handleMouseUpOrLeave.bind(this));
+        document.addEventListener('mousemove', this.boundHandleMouseMove);
+        document.addEventListener('mouseup', this.boundHandleMouseUpOrLeave);
+        document.addEventListener('mouseleave', this.boundHandleMouseUpOrLeave);
     }
 
     /**
@@ -197,9 +198,9 @@ export class NodeDragHandler {
         // This allows the click event, which fires after mouseup, to correctly check its value.
 
         // Remove global mousemove and mouseup listeners
-        document.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-        document.removeEventListener('mouseup', this.handleMouseUpOrLeave.bind(this));
-        document.removeEventListener('mouseleave', this.handleMouseUpOrLeave.bind(this));
+        document.removeEventListener('mousemove', this.boundHandleMouseMove);
+        document.removeEventListener('mouseup', this.boundHandleMouseUpOrLeave);
+        document.removeEventListener('mouseleave', this.boundHandleMouseUpOrLeave);
     }
 
     /**

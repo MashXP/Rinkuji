@@ -7,6 +7,7 @@ import { GraphInitializer } from '../../src/js/components/GraphInitializer.js';
 jest.mock('@services/api.js', () => ({
     getWordGraph: jest.fn(),
     searchByKanji: jest.fn(),
+    searchWord: jest.fn(),
 }));
 
 // Mock GraphInitializer

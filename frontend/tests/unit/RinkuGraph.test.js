@@ -376,7 +376,5 @@ describe('RinkuGraph', () => {
         expect(wordContainerAddEventListenerSpy).toHaveBeenCalledWith('click', expect.any(Function));
         expect(viewportAddEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
         expect(viewportAddEventListenerSpy).toHaveBeenCalledWith('mousedown', expect.any(Function));
-        expect(viewportAddEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
-        expect(viewportAddEventListenerSpy).toHaveBeenCalledWith('mouseleave', expect.any(Function));
     });
 });

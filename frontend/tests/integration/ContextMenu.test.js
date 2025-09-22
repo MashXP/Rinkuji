@@ -282,10 +282,12 @@ describe('Integration: Context Menu Functionality', () => {
 
         // Simulate tap-and-hold
         targetNode.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [{ clientX: 100, clientY: 100 }] }));
-        jest.advanceTimersByTime(500); // Hold for 500ms
-        targetNode.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
+        jest.advanceTimersByTime(500); // Advance time to trigger the long-press timeout
 
+        // The menu should be visible now, before the touchend event
         expect(nodeContextMenu.style.display).toBe('block');
+
+        targetNode.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
         jest.useRealTimers();
     });
 });
