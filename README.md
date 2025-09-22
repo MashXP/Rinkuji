@@ -61,7 +61,7 @@ This project is licensed under the GNU AGPLv3 License - see the [LICENSE](LICENS
 *   ~~Finalize the Frontend test (urgent)~~  
 *   ~~**API Caching:** Introduce caching mechanisms in the backend for Jisho API calls to boost performance and minimize redundant requests.~~ (Implemented)
 *   ~~DEPLOYED~~
-*   **Design / Add Web icon**
+*   ~~**Design / Add Web icon**~~
 *   ~~**Make it work on Mobile** (URGENT)~~
 *   ~~**Increase test coverage**~~
 *   ~~**Filter out Kanji-less results in NewSearch**~~
