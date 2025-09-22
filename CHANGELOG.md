@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.1] - 2025-09-22
+#### Added
+- **Mobile Responsiveness**: Make the application usable on mobile devices.
+
 ## [1.0.0 - RELEASE] - 2025-09-19
 #### Added
 - **Frontend Tests**: Implemented comprehensive unit and integration tests for frontend components (main.js, UITogglingManager.js, api.js, etc.).
