@@ -48,13 +48,13 @@ describe('API Service Integration', () => {
         });
       }
       if (url.includes('/search_words')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [{ slug: 'jisho suggestion' }] }) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [{ slug: '日本語' }] }) });
       }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [] }) });
     });
 
     const suggestions = await api.getSuggestions('query');
-    expect(suggestions).toEqual(['mocked suggestion 1', 'mocked suggestion 2', 'jisho suggestion']);
+    expect(suggestions).toEqual(['mocked suggestion 1', 'mocked suggestion 2', '日本語']);
     expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?q=query');
     expect(global.fetch).toHaveBeenCalledWith('/search_words?query=query');
   });

@@ -61,7 +61,7 @@ describe('API Service', () => {
         });
 
         test('should fetch and return Jisho words slugs', async () => {
-            const mockResponse = { data: [{ slug: 'word1' }, { slug: 'word2' }] };
+            const mockResponse = { data: [{ slug: '日本語' }, { slug: '単語' }] };
             global.fetch.mockResolvedValueOnce({
                 ok: true,
                 json: () => Promise.resolve(mockResponse),
@@ -69,7 +69,31 @@ describe('API Service', () => {
 
             const result = await apiService.searchJishoWords('test');
             expect(global.fetch).toHaveBeenCalledWith('/search_words?query=test');
-            expect(result).toEqual(['word1', 'word2']);
+            expect(result).toEqual(['日本語', '単語']);
+        });
+
+        test('should filter out non-Japanese results', async () => {
+            const mockResponse = { data: [{ slug: '日本語' }, { slug: 'test' }, { slug: '123' }] };
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(mockResponse),
+            });
+
+            const result = await apiService.searchJishoWords('test');
+            expect(global.fetch).toHaveBeenCalledWith('/search_words?query=test');
+            expect(result).toEqual(['日本語']);
+        });
+
+        test('should filter out results without kanji', async () => {
+            const mockResponse = { data: [{ slug: '日本語' }, { slug: 'ひらがな' }] };
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(mockResponse),
+            });
+
+            const result = await apiService.searchJishoWords('test');
+            expect(global.fetch).toHaveBeenCalledWith('/search_words?query=test');
+            expect(result).toEqual(['日本語']);
         });
 
         test('should handle HTTP errors', async () => {
@@ -105,6 +129,18 @@ describe('API Service', () => {
             expect(result).toEqual(['日', '本']);
         });
 
+        test('should filter out non-Japanese characters', async () => {
+            const mockResponse = { data: [{ character: '日' }, { character: 'a' }, { character: '1' }] };
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(mockResponse),
+            });
+
+            const result = await apiService.searchJishoKanji('test');
+            expect(global.fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=test');
+            expect(result).toEqual(['日']);
+        });
+
         test('should handle HTTP errors', async () => {
             global.fetch.mockResolvedValueOnce({
                 ok: false,
@@ -129,10 +165,10 @@ describe('API Service', () => {
         test('should combine local and Jisho word suggestions', async () => {
             global.fetch
                 .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(['local1', 'local2']) }) // For getLocalSuggestions
-                .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ data: [{'slug': 'jishoW1'}, {'slug': 'jishoW2'}] }) }); // For searchJishoWords
+                .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ data: [{'slug': '日本語'}, {'slug': '単語'}] }) }); // For searchJishoWords
 
             const result = await apiService.getSuggestions('test');
-            expect(result).toEqual(['local1', 'local2', 'jishoW1', 'jishoW2']);
+            expect(result).toEqual(['local1', 'local2', '日本語', '単語']);
             expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?q=test');
             expect(global.fetch).toHaveBeenCalledWith('/search_words?query=test');
             expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -158,7 +194,7 @@ describe('API Service', () => {
                 .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ data: [{'slug': 'common'}, {'slug': 'jisho'}] }) }); // For searchJishoWords
 
             const result = await apiService.getSuggestions('test');
-            expect(result).toEqual(['common', 'local', 'jisho']);
+            expect(result).toEqual(['common', 'local']);
             expect(global.fetch).toHaveBeenCalledTimes(2);
         });
     });

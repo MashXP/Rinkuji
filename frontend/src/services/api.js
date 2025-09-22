@@ -29,7 +29,10 @@ export async function searchJishoWords(query) {
         }
         const data = await response.json();
         // Extract relevant terms for suggestions
-        return data.data ? data.data.map(item => item.slug) : [];
+        const suggestions = data.data ? data.data.map(item => item.slug) : [];
+        const japaneseRegex = /^[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]+$/;
+        const kanjiRegex = /[\u4e00-\u9faf\u3400-\u4dbf]/;
+        return suggestions.filter(s => japaneseRegex.test(s) && kanjiRegex.test(s));
     } catch (error) {
         console.error("Failed to fetch Jisho words:", error);
         return [];
@@ -48,7 +51,9 @@ export async function searchJishoKanji(query) {
         }
         const data = await response.json();
         // Extract relevant terms for suggestions
-        return data.data ? data.data.map(item => item.character) : [];
+        const suggestions = data.data ? data.data.map(item => item.character) : [];
+        const japaneseRegex = /^[　-〿぀-ゟ゠-ヿ＀-ﾟ一-龯㐀-䶿]+$/;
+        return suggestions.filter(s => japaneseRegex.test(s));
     } catch (error) {
         console.error("Failed to fetch Jisho kanji:", error);
         return [];
