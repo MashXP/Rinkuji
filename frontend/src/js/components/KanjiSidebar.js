@@ -90,6 +90,11 @@ export class KanjiSidebar {
                     // If found, focus on it and center the view using the provided callbacks
                     if (foundKanjiSpan) this.focusKanjiCallback(foundKanjiSpan);
                     this.centerViewCallback(targetNode);
+
+                    // On mobile, hide the sidebar after selection
+                    if (document.body.classList.contains('mobile-layout')) {
+                        this.sidebarElement.classList.remove('visible');
+                    }
                 }
             });
 

@@ -18,6 +18,9 @@ export class ContextMenuHandler {
         this.activeContextMenuNode = null; // The node that the context menu is currently open for
         this.activeContextMenuKanji = null; // The specific kanji span that was right-clicked
 
+        this.touchstartTime = 0;
+        this.longPressTimer = null;
+
         this.addEventListeners();
     }
 
@@ -28,6 +31,9 @@ export class ContextMenuHandler {
     handleContextMenu(e) {
         // Hide any previously open context menu
         this.hideContextMenu();
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
         // Check if right-click was on a word node or kanji span
         let targetNode = e.target.closest('.expanded-node, #rinkuWord');
@@ -144,10 +150,30 @@ export class ContextMenuHandler {
         this.hideContextMenu(); // Hide menu after action
     }
 
+    handleTouchStart(e) {
+        this.touchstartTime = Date.now();
+        this.longPressTimer = setTimeout(() => {
+            this.handleContextMenu(e);
+        }, 500);
+    }
+
+    handleTouchEnd(e) {
+        clearTimeout(this.longPressTimer);
+    }
+
+    handleTouchMove(e) {
+        clearTimeout(this.longPressTimer);
+    }
+
     addEventListeners() {
         // Event listener for clicks on context menu items
         this.nodeContextMenu.addEventListener('click', this.handleContextMenuItemClick.bind(this));
         // Event listener to hide context menu when clicking anywhere else on the document
         document.addEventListener('click', this.hideContextMenu.bind(this));
+
+        // Touch events for long press
+        document.addEventListener('touchstart', this.handleTouchStart.bind(this));
+        document.addEventListener('touchend', this.handleTouchEnd.bind(this));
+        document.addEventListener('touchmove', this.handleTouchMove.bind(this));
     }
 }

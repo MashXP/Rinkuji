@@ -110,6 +110,7 @@ export class RinkuGraph extends CanvasComponent {
     _addKanjiEventListeners(kanjiSpan) {
         kanjiSpan.addEventListener('click', this.handleKanjiClick.bind(this));
         kanjiSpan.addEventListener('dblclick', this.handleKanjiDoubleClick.bind(this));
+        kanjiSpan.addEventListener('touchend', this.handleKanjiClick.bind(this));
     }
 
     /**
@@ -129,6 +130,12 @@ export class RinkuGraph extends CanvasComponent {
         // Block concurrent user clicks, but allow programmatic ones
         if (!isProgrammatic && (this.isSearching || this.nodeDragHandler.hasDragOccurred())) {
             console.log('Search in progress. Ignoring user click.');
+            return;
+        }
+
+        // If already expanded, rerandomize if hasMoreWords is true
+        if ((kanjiElement.classList.contains('active-source-kanji') || kanjiElement.classList.contains('expanded-parent-kanji')) && kanjiElement.dataset.hasMoreWords === 'true') {
+            await this.rerandomizeNode(kanjiElement);
             return;
         }
 
@@ -160,7 +167,7 @@ export class RinkuGraph extends CanvasComponent {
                 shouldDuplicate = expandedKanjiCount > 1;
             }
 
-            if (kanjiElement.classList.contains('kanji-char') && shouldDuplicate && !isProgrammatic) { // Only allow user clicks to trigger duplication
+            if (shouldDuplicate && !isProgrammatic) { // Only allow user clicks to trigger duplication
                 await this.nodeDuplicator.duplicateAndExpandNode(parentNode, kanjiElement);
                 return;
             }
@@ -509,6 +516,13 @@ export class RinkuGraph extends CanvasComponent {
             }
         });
 
+        // Add touchend listener to the root word for showing its meaning on mobile
+        this.wordContainer.addEventListener('touchend', (e) => {
+            if (!this.nodeDragHandler.hasDragOccurred()) {
+                this.handleNodeClick(this.wordContainer, e);
+            }
+        });
+
         // Mousemove for dragging nodes AND panning
         this.viewport.addEventListener('mousemove', (e) => {
             const dragHandled = this.nodeDragHandler.handleMouseMove(e);
@@ -523,8 +537,5 @@ export class RinkuGraph extends CanvasComponent {
                 this.meaningDisplayManager.hideMeaning();
             }
         });
-
-        this.viewport.addEventListener('mouseup', this.nodeDragHandler.handleMouseUpOrLeave.bind(this.nodeDragHandler));
-        this.viewport.addEventListener('mouseleave', this.nodeDragHandler.handleMouseUpOrLeave.bind(this.nodeDragHandler));
     }
 }

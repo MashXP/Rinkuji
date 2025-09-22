@@ -49,6 +49,14 @@ export class NodeCreator {
             }
         });
 
+        // Add touchend listener for showing definitions on mobile
+        node.addEventListener('touchend', (e) => {
+            // Only fire if a drag did not occur
+            if (!this.nodeDragHandler.hasDragOccurred()) {
+                this.onNodeClickCallback(node, e);
+            }
+        });
+
         wordString.split('').forEach(char => {
             const charSpan = document.createElement('span');
             charSpan.textContent = char;

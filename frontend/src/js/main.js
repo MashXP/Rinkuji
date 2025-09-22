@@ -3,8 +3,10 @@ import { RinkuGraph } from './components/RinkuGraph.js';
 import { OptionsMenu } from './components/OptionsMenu.js';
 import { NewSearchModal } from './components/NewSearchModal.js';
 import { UITogglingManager } from './managers/UITogglingManager.js';
+import { initializeResponsiveLayout } from './utils/responsive.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initializeResponsiveLayout();
     const viewport = document.getElementById('rinkuViewport');
     const canvas = document.getElementById('rinkuCanvas');
     const wordContainer = document.getElementById('rinkuWord');
@@ -71,12 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
         UITogglingManager.setupToggle({
             button: hideUiBtn,
             target: rinkuFooter,
-            toggleClass: 'is-manually-hidden',
-            onState: { // State when UI is hidden
+            toggleClass: 'is-manually-hidden', // This class moves the footer off-screen.
+            buttonToggleClass: 'active', // Let's use 'active' for consistency, assuming it styles the button when controls are shown.
+            onState: { // State when 'is-manually-hidden' class IS present (target is hidden)
                 html: '<i class="fas fa-caret-left"></i>',
                 title: 'Show Controls'
             },
-            offState: { // State when UI is visible
+            offState: { // State when 'hidden' class is NOT present (target is visible)
                 html: '<i class="fas fa-caret-right"></i>',
                 title: 'Hide Controls'
             }

@@ -149,6 +149,7 @@ describe('main.js initialization', () => {
             button: mockHideUiBtn,
             target: mockRinkuFooter,
             toggleClass: 'is-manually-hidden',
+            buttonToggleClass: 'active',
             onState: { // State when UI is hidden
                 html: '<i class="fas fa-caret-left"></i>',
                 title: 'Show Controls'

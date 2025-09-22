@@ -275,4 +275,17 @@ describe('Integration: Context Menu Functionality', () => {
         expect(nodesContainer.querySelector('[data-word-slug="平日"]')).not.toBeNull();
         expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(2);
     });
+
+    test('should show context menu on tap-and-hold on a node', () => {
+        jest.useFakeTimers();
+        const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
+
+        // Simulate tap-and-hold
+        targetNode.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [{ clientX: 100, clientY: 100 }] }));
+        jest.advanceTimersByTime(500); // Hold for 500ms
+        targetNode.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
+
+        expect(nodeContextMenu.style.display).toBe('block');
+        jest.useRealTimers();
+    });
 });

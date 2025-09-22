@@ -197,3 +197,14 @@ body.rinku-body {
     opacity: 0;
     transition: opacity 0.5s ease;
 }
+
+@media (max-width: 768px) {
+    .rinku-word {
+        font-size: 2rem;
+    }
+
+    .expanded-node {
+        font-size: 1.5rem;
+        padding: 8px;
+    }
+}
