@@ -726,6 +726,12 @@
     border-left: 3px solid var(--highlight-color); /* A colored border on the left */
 }
 
+.no-results-message {
+    padding: 12px 15px;
+    color: #bdc3c7;
+    font-style: italic;
+}
+
 /* --- Jisho Results Display --- */
 .jisho-results {
     margin-top: 20px;
