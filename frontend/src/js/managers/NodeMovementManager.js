@@ -19,7 +19,6 @@ export class NodeMovementManager {
         const currentY = parseFloat(node.style.top);
         const newX = currentX + dx;
         const newY = currentY + dy;
-        console.log(`Moving node ${node.id}: currentX=${currentX}, dx=${dx}, newX=${newX}`);
 
         node.style.left = `${newX}px`;
         node.style.top = `${newY}px`;
