@@ -145,9 +145,19 @@ export class PanZoom {
     }
 
     handleTouchEnd(e) {
-        this.panning = false;
-        this.isTwoFingerPinch = false;
-        this.initialPinchDistance = null;
+        if (e.touches.length === 0) {
+            // All fingers lifted, stop everything.
+            this.panning = false;
+            this.isTwoFingerPinch = false;
+            this.initialPinchDistance = null;
+        } else if (e.touches.length === 1 && this.isTwoFingerPinch) {
+            // Was pinching, now one finger remains. Switch to one-finger panning.
+            this.isTwoFingerPinch = false;
+            this.initialPinchDistance = null;
+            this.panning = true;
+            this.lastTouchX = e.touches[0].clientX;
+            this.lastTouchY = e.touches[0].clientY;
+        }
     }
 
     handleTouchCancel(e) {

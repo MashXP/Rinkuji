@@ -98,6 +98,67 @@ describe('NodeCreator', () => {
         expect(node.children[1].classList.contains('kanji-char')).toBe(false);
     });
 
+    test('createWordNode should handle non-kanji characters correctly', () => {
+        mockKanjiSidebar.hasParentKanji.mockReturnValue(false);
+        const lineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const node = nodeCreator.createWordNode('日本go', '日', lineElement);
+
+        // Expect 4 spans: 日, 本, g, o
+        expect(node.children.length).toBe(4);
+
+        const nonKanjiSpan1 = node.children[2];
+        const nonKanjiSpan2 = node.children[3];
+        expect(nonKanjiSpan1.textContent).toBe('g');
+        expect(nonKanjiSpan2.textContent).toBe('o');
+
+        // Event listeners should only be added to kanji spans
+        expect(mockAddKanjiEventListeners).toHaveBeenCalledTimes(2);
+    });
+
+    test('clicking a node should call onNodeClickCallback if no drag occurred', () => {
+        mockNodeDragHandler.hasDragOccurred.mockReturnValue(false);
+        const node = nodeCreator.createWordNode('test', 't', null);
+
+        // Simulate click
+        const clickEvent = new MouseEvent('click');
+        node.dispatchEvent(clickEvent);
+
+        expect(mockOnNodeClickCallback).toHaveBeenCalledWith(node, clickEvent);
+    });
+
+    test('clicking a node should NOT call onNodeClickCallback if a drag occurred', () => {
+        mockNodeDragHandler.hasDragOccurred.mockReturnValue(true);
+        const node = nodeCreator.createWordNode('test', 't', null);
+
+        // Simulate click
+        const clickEvent = new MouseEvent('click');
+        node.dispatchEvent(clickEvent);
+
+        expect(mockOnNodeClickCallback).not.toHaveBeenCalled();
+    });
+
+    test('touchend on a node should call onNodeClickCallback if no drag occurred', () => {
+        mockNodeDragHandler.hasDragOccurred.mockReturnValue(false);
+        const node = nodeCreator.createWordNode('test', 't', null);
+
+        // Simulate touchend
+        const touchendEvent = new TouchEvent('touchend');
+        node.dispatchEvent(touchendEvent);
+
+        expect(mockOnNodeClickCallback).toHaveBeenCalledWith(node, touchendEvent);
+    });
+
+    test('touchend on a node should NOT call onNodeClickCallback if a drag occurred', () => {
+        mockNodeDragHandler.hasDragOccurred.mockReturnValue(true);
+        const node = nodeCreator.createWordNode('test', 't', null);
+
+        // Simulate touchend
+        const touchendEvent = new TouchEvent('touchend');
+        node.dispatchEvent(touchendEvent);
+
+        expect(mockOnNodeClickCallback).not.toHaveBeenCalled();
+    });
+
     test('positionAndAppendNode should set position and append to container', () => {
         const node = document.createElement('div');
         const parentNode = document.createElement('div');
@@ -172,6 +233,36 @@ describe('NodeCreator', () => {
                 // Since canvasRect.left/top are 0 and scale is 1, ux=60, uy=60
                 expect(line.getAttribute('x2')).toBe('60');
                 expect(line.getAttribute('y2')).toBe('60');
+                resolve();
+            });
+        });
+    });
+
+    test('refineLineEndpoint should do nothing if targetKanjiSpan is not found', () => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute = jest.fn();
+        const targetNode = document.createElement('div'); // No .active-source-kanji span
+
+        nodeCreator.refineLineEndpoint(line, targetNode);
+
+        return new Promise(resolve => {
+            requestAnimationFrame(() => {
+                expect(line.setAttribute).not.toHaveBeenCalled();
+                resolve();
+            });
+        });
+    });
+
+    test('refineLineEndpoint should do nothing if targetKanjiSpan is not found', () => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute = jest.fn();
+        const targetNode = document.createElement('div'); // No .active-source-kanji span
+
+        nodeCreator.refineLineEndpoint(line, targetNode);
+
+        return new Promise(resolve => {
+            requestAnimationFrame(() => {
+                expect(line.setAttribute).not.toHaveBeenCalled();
                 resolve();
             });
         });

@@ -25,6 +25,7 @@ export class RinkuGraph extends CanvasComponent {
         this.expandedElements = new Set();
 
         this.isSearching = false;
+        this.MAX_WORDS_TO_DISPLAY = 3;
 
         this.kanjiRegex = /[\u4e00-\u9faf]/;
 
@@ -124,119 +125,32 @@ export class RinkuGraph extends CanvasComponent {
         }
     }
 
-    async handleKanjiClick(e, isProgrammatic = false) {
+    async handleKanjiClick(e, isProgrammatic = false) { // Acts as a dispatcher
         const kanjiElement = e.currentTarget;
 
-        // Block concurrent user clicks, but allow programmatic ones
         if (!isProgrammatic && (this.isSearching || this.nodeDragHandler.hasDragOccurred())) {
             console.log('Search in progress. Ignoring user click.');
             return;
         }
 
-        // If already expanded, rerandomize if hasMoreWords is true
         if ((kanjiElement.classList.contains('active-source-kanji') || kanjiElement.classList.contains('expanded-parent-kanji')) && kanjiElement.dataset.hasMoreWords === 'true') {
             await this.rerandomizeNode(kanjiElement);
             return;
         }
 
+        const parentNode = kanjiElement.parentElement;
+        if (this._shouldDuplicateNode(parentNode, isProgrammatic)) {
+            await this.nodeDuplicator.duplicateAndExpandNode(parentNode, kanjiElement);
+            return;
+        }
+
+        if (!isProgrammatic) {
+            this.isSearching = true;
+            kanjiElement.classList.add('kanji-loading');
+        }
+
         try {
-            if (!isProgrammatic) {
-                this.isSearching = true;
-                kanjiElement.classList.add('kanji-loading');
-            }
-
-            const kanjiChar = kanjiElement.textContent;
-            const parentNode = kanjiElement.parentElement;
-            const isRootNode = parentNode === this.wordContainer;
-            const expandedKanjiCount = parentNode.querySelectorAll('.active-source-kanji, .expanded-parent-kanji').length;
-
-            let isRootLikeNode = isRootNode;
-            if (!isRootNode) {
-                // A child node is "root-like" if its word doesn't contain the kanji that created it.
-                const word = parentNode.dataset.wordSlug;
-                const sourceKanji = parentNode.dataset.sourceKanji;
-                if (word && sourceKanji && !word.includes(sourceKanji)) {
-                    isRootLikeNode = true;
-                }
-            }
-
-            let shouldDuplicate = false;
-            if (isRootLikeNode) {
-                shouldDuplicate = expandedKanjiCount >= 1;
-            } else {
-                shouldDuplicate = expandedKanjiCount > 1;
-            }
-
-            if (shouldDuplicate && !isProgrammatic) { // Only allow user clicks to trigger duplication
-                await this.nodeDuplicator.duplicateAndExpandNode(parentNode, kanjiElement);
-                return;
-            }
-
-            console.log(`Clicked kanji: ${kanjiChar}`);
-            const relatedWords = await this.fetchRelatedWords(kanjiChar);
-
-            if (relatedWords.length > 0) {
-                let wordsToDisplay;
-                const MAX_WORDS_TO_DISPLAY = 3;
-
-                if (relatedWords.length > MAX_WORDS_TO_DISPLAY) {
-                    kanjiElement.dataset.hasMoreWords = 'true';
-                }
-
-                if (relatedWords.length <= MAX_WORDS_TO_DISPLAY) {
-                    wordsToDisplay = relatedWords;
-                } else {
-                    // We have more than 3 words, so we need to select.
-                    // Prioritize showing the single-kanji word if it exists.
-                    const kanjiAsWord = relatedWords.find(word => word.slug === kanjiChar);
-                    const otherWords = relatedWords.filter(word => word.slug !== kanjiChar);
-
-                    if (kanjiAsWord) {
-                        // Ensure the single-kanji word is included.
-                        wordsToDisplay = [kanjiAsWord];
-                        this._shuffleArray(otherWords);
-                        const remainingSlots = MAX_WORDS_TO_DISPLAY - 1;
-                        wordsToDisplay.push(...otherWords.slice(0, remainingSlots));
-                    } else {
-                        // No single-kanji word, just pick 3 random words.
-                        this._shuffleArray(relatedWords);
-                        wordsToDisplay = relatedWords.slice(0, MAX_WORDS_TO_DISPLAY);
-                    }
-                }
-
-                this._focusKanji(kanjiElement);
-                this.drawExpansion(kanjiElement, kanjiChar, wordsToDisplay);
-                kanjiElement.classList.remove('kanji-char');
-                if (!this.expandedElements.has(kanjiElement)) {
-                    this.expandedElements.add(kanjiElement);
-                } // Mark as processed (for double-click centering)
-                kanjiElement.classList.add('active-source-kanji');
-
-                if (!this.kanjiSidebar.hasParentKanji(kanjiChar)) {
-                    this.kanjiSidebar.addKanji(kanjiChar, kanjiElement.parentElement);
-                }
-                console.log(`Expanded ${kanjiChar} with ${wordsToDisplay.length} words.`);
-            } else {
-                console.log(`Kanji ${kanjiChar} has no new expansions. Marking as expanded-parent-kanji.`);
-                kanjiElement.classList.remove('kanji-char');
-                if (!this.expandedElements.has(kanjiElement)) {
-                    this.expandedElements.add(kanjiElement);
-                }
-                kanjiElement.classList.add('expanded-parent-kanji');
-            }
-
-            const grandparentNode = parentNode._parent;
-            if (grandparentNode && grandparentNode.dataset.filterType === 'kanji') {
-                const parentWord = parentNode.dataset.wordSlug;
-                const containsKanji = this.kanjiRegex.test(parentWord);
-                const isPureKanji = this.nodeFilterManager._isKanjiOnly(parentWord);
-
-                if (containsKanji && !isPureKanji && parentNode._children.length > 0) {
-                    parentNode.classList.remove('node-hidden-by-filter');
-                    parentNode.classList.add('mixed-content-node');
-                    this.nodeFilterManager.setNodeVisibility(parentNode, true);
-                }
-            }
+            await this._performExpansion(kanjiElement);
         } catch (error) {
             console.error("An error occurred during kanji click handling:", error);
         } finally {
@@ -244,6 +158,99 @@ export class RinkuGraph extends CanvasComponent {
                 this.isSearching = false;
                 kanjiElement.classList.remove('kanji-loading');
             }
+        }
+    }
+
+    _isRootLikeNode(node) {
+        if (node.dataset.isRootNode === 'true' || node === this.wordContainer) {
+            return true;
+        }
+        // A child node is "root-like" if its word doesn't contain the kanji that created it.
+        const word = node.dataset.wordSlug;
+        const sourceKanji = node.dataset.sourceKanji;
+        return word && sourceKanji && !word.includes(sourceKanji);
+    }
+
+    _shouldDuplicateNode(parentNode, isProgrammatic) {
+        if (isProgrammatic) {
+            return false; // Programmatic clicks should not trigger duplication
+        }
+        const expandedKanjiCount = parentNode.querySelectorAll('.active-source-kanji, .expanded-parent-kanji').length;
+        if (this._isRootLikeNode(parentNode)) {
+            return expandedKanjiCount >= 1;
+        }
+        return expandedKanjiCount > 1;
+    }
+
+    _selectWordsToDisplay(relatedWords, kanjiChar) {
+        if (relatedWords.length <= this.MAX_WORDS_TO_DISPLAY) {
+            return relatedWords;
+        }
+
+        // We have more than MAX_WORDS_TO_DISPLAY words, so we need to select.
+        // Prioritize showing the single-kanji word if it exists.
+        const kanjiAsWord = relatedWords.find(word => word.slug === kanjiChar);
+        const otherWords = relatedWords.filter(word => word.slug !== kanjiChar);
+        this._shuffleArray(otherWords);
+
+        let wordsToDisplay = [];
+        if (kanjiAsWord) {
+            wordsToDisplay.push(kanjiAsWord);
+        }
+
+        const remainingSlots = this.MAX_WORDS_TO_DISPLAY - wordsToDisplay.length;
+        wordsToDisplay.push(...otherWords.slice(0, remainingSlots));
+
+        return wordsToDisplay;
+    }
+
+    async _performExpansion(kanjiElement) {
+        const kanjiChar = kanjiElement.textContent;
+        const parentNode = kanjiElement.parentElement;
+
+        console.log(`Clicked kanji: ${kanjiChar}`);
+        const relatedWords = await this.fetchRelatedWords(kanjiChar);
+
+        if (relatedWords.length > 0) {
+            if (relatedWords.length > this.MAX_WORDS_TO_DISPLAY) {
+                kanjiElement.dataset.hasMoreWords = 'true';
+            }
+            const wordsToDisplay = this._selectWordsToDisplay(relatedWords, kanjiChar);
+            this._focusKanji(kanjiElement);
+            this.drawExpansion(kanjiElement, kanjiChar, wordsToDisplay);
+            this._updateSourceKanjiState(kanjiElement, 'active-source-kanji');
+            this.kanjiSidebar.addKanji(kanjiChar, parentNode); // Will not add if already present
+            console.log(`Expanded ${kanjiChar} with ${wordsToDisplay.length} words.`);
+        } else {
+            console.log(`Kanji ${kanjiChar} has no new expansions. Marking as expanded-parent-kanji.`);
+            this._updateSourceKanjiState(kanjiElement, 'expanded-parent-kanji');
+        }
+
+        this._updateParentVisibilityAfterExpansion(parentNode);
+    }
+
+    _updateSourceKanjiState(kanjiElement, newClass) {
+        kanjiElement.classList.remove('kanji-char');
+        if (!this.expandedElements.has(kanjiElement)) {
+            this.expandedElements.add(kanjiElement);
+        }
+        kanjiElement.classList.add(newClass);
+    }
+
+    _updateParentVisibilityAfterExpansion(parentNode) {
+        const grandparentNode = parentNode._parent;
+        if (!grandparentNode || grandparentNode.dataset.filterType !== 'kanji') {
+            return;
+        }
+
+        const parentWord = parentNode.dataset.wordSlug;
+        const containsKanji = this.kanjiRegex.test(parentWord);
+        const isPureKanji = this.nodeFilterManager._isKanjiOnly(parentWord);
+
+        if (containsKanji && !isPureKanji && parentNode._children.length > 0) {
+            parentNode.classList.remove('node-hidden-by-filter');
+            parentNode.classList.add('mixed-content-node');
+            this.nodeFilterManager.setNodeVisibility(parentNode, true);
         }
     }
 
@@ -255,7 +262,6 @@ export class RinkuGraph extends CanvasComponent {
 
         const parentNode = sourceKanjiElement.parentElement;
         const sourceKanji = sourceKanjiElement.textContent;
-        const MAX_WORDS_TO_DISPLAY = 3;
 
         // 1. Partition children from this source into expanded and unexpanded
         const allSourceChildren = Array.from(parentNode._children || []).filter(child => child.dataset.sourceKanji === sourceKanji);
@@ -277,7 +283,7 @@ export class RinkuGraph extends CanvasComponent {
         const allRelatedWords = await this.fetchRelatedWords(sourceKanji);
 
         // 4. Determine how many new words we need and select them
-        const slotsToFill = MAX_WORDS_TO_DISPLAY - expandedChildren.length;
+        const slotsToFill = this.MAX_WORDS_TO_DISPLAY - expandedChildren.length;
         let newWordsToDisplay = [];
 
         if (slotsToFill > 0 && allRelatedWords.length > 0) {
@@ -474,8 +480,8 @@ export class RinkuGraph extends CanvasComponent {
             element_ux = 0;
             element_uy = 0;
         } else {
-            element_ux = parseFloat(element.style.left);
-            element_uy = parseFloat(element.style.top);
+            element_ux = parseFloat(element.style.left || 0);
+            element_uy = parseFloat(element.style.top || 0);
         }
 
         const newScale = 1.0;

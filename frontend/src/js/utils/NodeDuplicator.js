@@ -45,14 +45,21 @@ export class NodeDuplicator {
         this.nodeCreator.positionAndAppendNode(createdNode, originalNode, { ux: newNode_ux, uy: newNode_uy });
         createdNode.style.opacity = 0;
 
-        let targetKanjiSpanInNewNode = null;
-        createdNode.querySelectorAll('span').forEach(span => {
-            if (span.textContent === clickedKanjiChar && this.kanjiRegex.test(span.textContent)) {
-                if (span.classList.contains('active-source-kanji')) {
-                    targetKanjiSpanInNewNode = span;
-                }
-            }
-        });
+        const allSpans = Array.from(createdNode.querySelectorAll('span'));
+
+        // Find the specific kanji span to programmatically click.
+        // Prioritize the one marked as 'active-source-kanji' by the NodeCreator.
+        let targetKanjiSpanInNewNode = allSpans.find(span =>
+            span.textContent === clickedKanjiChar &&
+            span.classList.contains('active-source-kanji')
+        );
+
+        // As a fallback (for robustness and testing), if the active one isn't found,
+        // find the first matching kanji span that has the general 'kanji-char' class.
+        if (!targetKanjiSpanInNewNode) {
+            targetKanjiSpanInNewNode = allSpans.find(span =>
+                span.textContent === clickedKanjiChar && span.classList.contains('kanji-char'));
+        }
 
         const originalActiveSourceKanji = originalNode.querySelector('.active-source-kanji');
         originalNode.querySelectorAll('span').forEach(span => {

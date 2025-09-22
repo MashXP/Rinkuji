@@ -67,6 +67,24 @@ describe('NewSearchModal', () => {
         expect(newSearchModal.selectedSuggestionIndex).toBe(-1);
     });
 
+    test('constructor should log error and return if required elements are missing', () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        const incompleteModal = new NewSearchModal(
+            null, // Missing modalElement
+            openButtonElement,
+            closeButtonElement,
+            inputElement,
+            suggestionsListElement,
+            jishoLoadingIndicatorElement
+        );
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith("NewSearchModal: Missing required elements for initialization.");
+        expect(incompleteModal.modal).toBeUndefined(); // Should not set properties if constructor returns early
+
+        consoleErrorSpy.mockRestore();
+    });
+
     test('show should add visible class and focus input', () => {
         const focusSpy = jest.spyOn(inputElement, 'focus');
         const selectSpy = jest.spyOn(inputElement, 'select');

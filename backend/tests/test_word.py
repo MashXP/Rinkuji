@@ -24,6 +24,20 @@ def test_word_from_dict():
     assert len(word.kanji_components) == 1
     assert word.kanji_components[0].character == "本"
 
+def test_word_from_dict_missing_kanji_components():
+    data = {"id": 4, "text": "私", "reading": "わたし", "meaning": "I, private"}
+    word = Word.from_dict(data)
+    assert word.id == 4
+    assert word.text == "私"
+    assert word.reading == "わたし"
+    assert word.meaning == "I, private"
+    assert word.kanji_components == []
+
+def test_word_repr():
+    kanji1 = Kanji(id=101, character="日", meaning="day, sun", on_reading=["にち"], kun_reading=["ひ"], components=[])
+    word = Word(id=1, text="日本語", reading="にほんご", meaning="Japanese language", kanji_components=[kanji1])
+    assert repr(word) == "Word(id=1, text='日本語', reading='にほんご', meaning='Japanese language')"
+
 def test_word_to_dict():
     kanji1 = Kanji(id=103, character="食", meaning="eat", on_reading=["しょく"], kun_reading=["た.べる"], components=[])
     word = Word(id=3, text="食べる", reading="たべる", meaning="to eat", kanji_components=[kanji1])

@@ -1,7 +1,22 @@
 module.exports = {
+  collectCoverage: false,
+  coverageDirectory: "coverage",
+  collectCoverageFrom: [
+    "<rootDir>/src/js/**/*.js",
+    "!<rootDir>/src/js/main.js", // Exclude main.js as it's an entry point
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+  },
+  coverageReporters: ["json", "lcov", "text", "clover"],
   testEnvironment: 'jsdom',
   transform: {
-    '^.+\.js$': 'babel-jest',
+    '^.+\.jsx?$': 'babel-jest',
   },
   moduleNameMapper: {
     '^@services/api.js$': '<rootDir>/src/services/api.js',
@@ -17,8 +32,5 @@ module.exports = {
     '\.css$': '<rootDir>/__mocks__/styleMock.js',
     '^NewSearchModal$': '<rootDir>/src/js/components/NewSearchModal.js',
   },
-  collectCoverageFrom: [
-    '<rootDir>/src/**/*.{js,jsx,ts,tsx}'
-  ],
   moduleDirectories: ["node_modules", "<rootDir>/src/js"]
 };

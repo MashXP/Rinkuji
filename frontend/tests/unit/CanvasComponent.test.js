@@ -1,5 +1,9 @@
 import { CanvasComponent } from '../../src/js/components/CanvasComponent.js';
 
+// Explicitly unmock the module to ensure we are testing the real implementation,
+// as it might be mocked by other test files in the suite.
+jest.unmock('../../src/js/components/CanvasComponent.js');
+
 // Mock PanZoom class
 class MockPanZoom {
     constructor() {
@@ -61,6 +65,13 @@ describe('CanvasComponent', () => {
         expect(() => new MissingEventListeners(viewport, canvas, panZoom)).toThrow(
             "Method 'addEventListeners()' must be implemented by subclasses."
         );
+    });
+
+    test('base addEventListeners should be a no-op for coverage', () => {
+        const component = new ConcreteCanvasComponent(viewport, canvas, panZoom);
+        // This test is purely for code coverage purposes.
+        // The base method is designed to be overridden and never called directly.
+        expect(() => CanvasComponent.prototype.addEventListeners.call(component)).not.toThrow();
     });
 
     test('_getCanvasCoordinates should return correct unscaled coordinates', () => {

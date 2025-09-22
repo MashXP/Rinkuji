@@ -55,7 +55,7 @@ export class NodeFilterManager {
             });
         }
 
-        console.log(`Node ${node.dataset.wordSlug} filtered by: ${filterType}`);
+        // console.log(`Node ${node.dataset.wordSlug} filtered by: ${filterType}`);
     }
 
     /**
@@ -106,14 +106,17 @@ export class NodeFilterManager {
 
             let shouldBeHidden = false;
             if (parentFilterType === 'kanji') {
-                if (containsKanji && !isPureKanji) { // It's a mixed-content node
-                    // Hide if it has no children, otherwise show with dashed border
-                    if (child._children.length === 0) {
-                        shouldBeHidden = true;
-                    }
-                    child.classList.add('mixed-content-node');
-                } else if (!containsKanji) { // It's pure kana
+                if (!containsKanji) {
+                    // Pure kana/other node, should be hidden.
                     shouldBeHidden = true;
+                } else if (!isPureKanji) {
+                    // It's a mixed-content node.
+                    child.classList.add('mixed-content-node');
+                    // Hide only if it has no children.
+                    shouldBeHidden = child._children.length === 0;
+                } else {
+                    // Pure kanji node, should not be hidden.
+                    shouldBeHidden = false;
                 }
             }
 
@@ -135,6 +138,8 @@ export class NodeFilterManager {
      * @param {boolean} isVisible - True to make visible, false to hide.
      */
     setNodeVisibility(node, isVisible) {
+        if (!node) return;
+
         const transitionDuration = 100; // Matches CSS transition
 
         const setElementVisibility = (element, visible) => {
@@ -142,10 +147,10 @@ export class NodeFilterManager {
             if (visible) {
                 element.style.display = '';
                 requestAnimationFrame(() => {
-                    element.style.opacity = 1;
+                    element.style.opacity = '1';
                 });
             } else {
-                element.style.opacity = 0;
+                element.style.opacity = '0';
                 setTimeout(() => {
                     element.style.display = 'none';
                 }, transitionDuration);

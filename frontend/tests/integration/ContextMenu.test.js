@@ -6,6 +6,7 @@ import * as apiService from '@services/api.js';
 jest.mock('@services/api.js', () => ({
     getWordGraph: jest.fn(),
     searchByKanji: jest.fn(),
+    searchWord: jest.fn(),
 }));
 
 describe('Integration: Context Menu Functionality', () => {

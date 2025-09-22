@@ -282,31 +282,35 @@ export class OptionsMenu {
             this.customColorPreview.style.color = customText;
         }
 
-        const savedBg = localStorage.getItem(this.CSS_VAR_BG);
-        const savedHighlight = localStorage.getItem(this.CSS_VAR_HIGHLIGHT);
-        const savedText = localStorage.getItem(this.CSS_VAR_TEXT);
         const activePresetIndex = localStorage.getItem('activePresetIndex');
 
-        if (savedBg && savedHighlight && savedText) {
+        // If a preset was last active, apply it.
+        if (activePresetIndex !== null && activePresetIndex !== 'custom' && this.PRESETS[parseInt(activePresetIndex)]) {
+            const presetIndex = parseInt(activePresetIndex);
+            this._applyPreset(this.PRESETS[presetIndex], presetIndex);
+        }
+        // If custom was last active, apply the saved custom theme.
+        else if (activePresetIndex === 'custom' && customBg && customHighlight && customText) {
+            this._applyColor(this.CSS_VAR_BG, customBg, true);
+            this._applyColor(this.CSS_VAR_HIGHLIGHT, customHighlight, true);
+            this._applyColor(this.CSS_VAR_TEXT, customText, true);
+            this._setCustomUIState();
+        }
+        // Fallback for any other case (e.g., first load, corrupted localStorage)
+        else {
+            const savedBg = localStorage.getItem(this.CSS_VAR_BG);
+            const savedHighlight = localStorage.getItem(this.CSS_VAR_HIGHLIGHT);
+            const savedTextColor = localStorage.getItem(this.CSS_VAR_TEXT);
+            // If a theme is partially saved, try to load it. Otherwise, load default.
+            if (savedBg && savedHighlight && savedTextColor) {
             this._applyColor(this.CSS_VAR_BG, savedBg);
             this._applyColor(this.CSS_VAR_HIGHLIGHT, savedHighlight);
-            this._applyColor(this.CSS_VAR_TEXT, savedText);
-
-            if (activePresetIndex === 'custom') {
-                this._setActivePreset(null); // Custom is active
-                this.colorInputContainer.classList.add('active'); // Show inputs if custom was active
-            } else if (activePresetIndex !== null && this.PRESETS[parseInt(activePresetIndex)]) {
-                this._setActivePreset(parseInt(activePresetIndex));
-                this.colorInputContainer.classList.remove('active'); // Hide inputs if a preset was active
+                this._applyColor(this.CSS_VAR_TEXT, savedTextColor);
+                this._setCustomUIState(); // Treat as custom if index is unknown
             } else {
-                // Fallback if saved index is invalid, but colors exist. Treat as custom.
-                this._setActivePreset(null);
-                localStorage.setItem('activePresetIndex', 'custom');
-                this.colorInputContainer.classList.add('active'); // Show inputs in fallback custom case
+                // If no colors are saved, apply the default preset
+                this._applyPreset(this.PRESETS[0], 0);
             }
-        } else {
-            // If no colors are saved, apply the default preset
-            this._applyPreset(this.PRESETS[0], 0);
         }
     }
 

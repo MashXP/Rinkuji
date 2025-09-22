@@ -115,6 +115,19 @@ describe('KanjiSidebar', () => {
         expect(kanjiListContainer.children[0].textContent).toBe('犬');
     });
 
+    test('_updateList should filter case-insensitively', () => {
+        const node1 = document.createElement('div');
+        const node2 = document.createElement('div');
+        kanjiSidebar.addKanji('A', node1);
+        kanjiSidebar.addKanji('b', node2);
+
+        searchInput.value = 'a'; // lowercase search
+        kanjiSidebar._updateList();
+
+        expect(kanjiListContainer.children.length).toBe(1);
+        expect(kanjiListContainer.children[0].textContent).toBe('A');
+    });
+
     test('_updateList should dim items if node is hidden or filtered', () => {
         const node1 = document.createElement('div');
         node1.dataset.hidden = 'true';
@@ -172,6 +185,36 @@ describe('KanjiSidebar', () => {
         expect(centerViewCallback).toHaveBeenCalledWith(mockNode);
     });
 
+    test('clicking a list item should find kanji span with expanded-parent-kanji class', () => {
+        const mockNode = document.createElement('div');
+        const mockSpan = document.createElement('span');
+        mockSpan.textContent = '日';
+        mockSpan.classList.add('expanded-parent-kanji'); // Test the other class
+        mockNode.appendChild(mockSpan);
+
+        kanjiSidebar.addKanji('日', mockNode);
+        kanjiSidebar._updateList();
+
+        const listItem = kanjiListContainer.querySelector('.parent-kanji-list-item');
+        listItem.click();
+
+        expect(focusKanjiCallback).toHaveBeenCalledWith(mockSpan);
+        expect(centerViewCallback).toHaveBeenCalledWith(mockNode);
+    });
+
+    test('clicking a list item should still center view if no matching kanji span is found', () => {
+        const mockNode = document.createElement('div'); // No child spans
+
+        kanjiSidebar.addKanji('日', mockNode);
+        kanjiSidebar._updateList();
+
+        const listItem = kanjiListContainer.querySelector('.parent-kanji-list-item');
+        listItem.click();
+
+        expect(focusKanjiCallback).not.toHaveBeenCalled();
+        expect(centerViewCallback).toHaveBeenCalledWith(mockNode); // Should still center on the parent node
+    });
+
     test('clicking a dimmed list item should not call callbacks', () => {
         const mockNode = document.createElement('div');
         mockNode.dataset.hidden = 'true';
@@ -209,6 +252,26 @@ describe('KanjiSidebar', () => {
         expect(kanjiSidebar.activeSidebarNode).toBeNull();
     });
 
+    test('clicking inside context menu should not hide it', () => {
+        const mockNode = document.createElement('div');
+        kanjiSidebar.addKanji('日', mockNode);
+        kanjiSidebar._updateList();
+
+        const listItem = kanjiListContainer.querySelector('.parent-kanji-list-item');
+        const contextMenuEvent = new MouseEvent('contextmenu', {
+            bubbles: true,
+        });
+        listItem.dispatchEvent(contextMenuEvent);
+
+        const contextMenu = document.body.querySelector('#sidebarContextMenu');
+        expect(contextMenu.style.display).toBe('block');
+
+        // Simulate a click on the context menu itself
+        contextMenu.click();
+
+        expect(contextMenu.style.display).toBe('block'); // Should remain visible
+    });
+
     test('context menu item click should trigger correct manager methods', () => {
         const mockNode = document.createElement('div');
         kanjiSidebar.addKanji('日', mockNode);
@@ -238,5 +301,33 @@ describe('KanjiSidebar', () => {
         hideNodeItem.click();
         expect(nodeCollapseExpandManager.hideNode).toHaveBeenCalledWith(mockNode);
         expect(kanjiSidebar.sidebarContextMenu.style.display).toBe('none');
+    });
+
+    test('context menu item click should do nothing if no active node', () => {
+        kanjiSidebar.activeSidebarNode = null; // Ensure no active node
+        const showNodeItem = kanjiSidebar.sidebarContextMenu.querySelector('[data-action="show-node"]');
+        const event = { target: showNodeItem, stopPropagation: jest.fn() };
+        kanjiSidebar._handleContextMenuItemClick(event);
+        expect(nodeCollapseExpandManager.showNode).not.toHaveBeenCalled();
+    });
+
+    test('clicking a list item on mobile layout should hide the sidebar', () => {
+        document.body.classList.add('mobile-layout');
+        kanjiSidebar.sidebarElement.classList.add('visible'); // Ensure sidebar is visible
+
+        const mockNode = document.createElement('div');
+        const mockSpan = document.createElement('span');
+        mockSpan.textContent = '日';
+        mockSpan.classList.add('active-source-kanji');
+        mockNode.appendChild(mockSpan);
+
+        kanjiSidebar.addKanji('日', mockNode);
+        kanjiSidebar._updateList();
+
+        const listItem = kanjiListContainer.querySelector('.parent-kanji-list-item');
+        listItem.click();
+
+        expect(kanjiSidebar.sidebarElement.classList.contains('visible')).toBe(false);
+        document.body.classList.remove('mobile-layout'); // Clean up
     });
 });
