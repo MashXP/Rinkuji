@@ -4,10 +4,13 @@
 #### Changed
 - **Search**: Enhanced suggestion retrieval to be case-insensitive and to search across more data fields for more comprehensive results.
 - **Search**: Improved Jisho API fetching to filter for relevant Japanese words containing Kanji.
+- **UI**: Integrated the new logo on the About page and favicon on the main page.
 #### Added
+- **Changelog**: Implemented a dynamic changelog page that fetches and displays version history from GitHub via a new API endpoint.
+- **UI**: The latest version number is now displayed on the main page and links to the changelog.
+- **Branding**: Added application logo and favicon.
 - **UI**: Added a styled "No results found" message to the search suggestions list for better user feedback.
-#### Fixed
-- Removed a debug console log from the `NodeMovementManager`.
+- **Tests**: Added frontend tests for the new changelog functionality.
 
 ## [1.0.2] - 2025-09-22
 #### Changed
