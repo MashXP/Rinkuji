@@ -6,7 +6,7 @@ export async function getLocalSuggestions(query) {
         return [];
     }
     try {
-        const response = await fetch(`/api/suggestions?query=${encodeURIComponent(query)}`);
+        const response = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -23,7 +23,7 @@ export async function searchJishoWords(query) {
         return [];
     }
     try {
-        const response = await fetch(`/search_words?query=${encodeURIComponent(query)}`);
+        const response = await fetch(`/search_words?query=${encodeURIComponent(query.toLowerCase())}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -42,7 +42,7 @@ export async function searchJishoKanji(query) {
         return [];
     }
     try {
-        const response = await fetch(`/search_by_kanji?kanji=${encodeURIComponent(query)}`);
+        const response = await fetch(`/search_by_kanji?kanji=${encodeURIComponent(query.toLowerCase())}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

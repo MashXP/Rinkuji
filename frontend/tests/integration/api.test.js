@@ -55,7 +55,7 @@ describe('API Service Integration', () => {
 
     const suggestions = await api.getSuggestions('query');
     expect(suggestions).toEqual(['mocked suggestion 1', 'mocked suggestion 2', 'jisho suggestion']);
-    expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?query=query');
+    expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?q=query');
     expect(global.fetch).toHaveBeenCalledWith('/search_words?query=query');
   });
 

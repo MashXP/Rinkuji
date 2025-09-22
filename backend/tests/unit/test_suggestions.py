@@ -85,7 +85,7 @@ def test_get_suggestions_entry_without_meaning(client):
     with patch('backend.src.api.suggestions.DATA', mock_data_content):
         response = client.get('/api/suggestions?q=apple')
         assert response.status_code == 200
-        assert response.json == []
+        assert "apple" in response.json
 
 def test_get_suggestions_meaning_not_list(client):
     mock_data_content = [
@@ -94,7 +94,7 @@ def test_get_suggestions_meaning_not_list(client):
     with patch('backend.src.api.suggestions.DATA', mock_data_content):
         response = client.get('/api/suggestions?q=fruit')
         assert response.status_code == 200
-        assert response.json == []
+        assert response.json == ["a common fruit"]
 
 def test_get_suggestions_meaning_item_not_string(client):
     mock_data_content = [
@@ -104,3 +104,20 @@ def test_get_suggestions_meaning_item_not_string(client):
         response = client.get('/api/suggestions?q=fruit')
         assert response.status_code == 200
         assert response.json == ["a common fruit"]
+
+def test_get_suggestions_case_insensitivity_on_all_fields(client):
+    # Test case-insensitivity on 'text' field
+    response = client.get('/api/suggestions?q=Apple')
+    assert response.status_code == 200
+    assert "apple" in response.json
+
+    # Test case-insensitivity on 'reading' field
+    response = client.get('/api/suggestions?q=アップル')
+    assert response.status_code == 200
+    assert "アップル" in response.json
+
+    # Test case-insensitivity on 'meaning' field
+    response = client.get('/api/suggestions?q=Fruit')
+    assert response.status_code == 200
+    expected_suggestions = ["a common fruit", "red fruit", "a yellow fruit", "an orange fruit", "citrus fruit", "a small fruit", "purple fruit", "a tropical fruit", "sweet fruit"]
+    assert all(s in response.json for s in expected_suggestions)

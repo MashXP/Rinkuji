@@ -104,6 +104,21 @@ describe('Integration: NewSearchModal', () => {
         expect(jishoLoadingIndicatorElement).not.toBeVisible();
     });
 
+    test('search input should be case-insensitive and display suggestions', async () => {
+        apiService.getSuggestions.mockResolvedValueOnce(['suggestion1', 'suggestion2']);
+
+        fireEvent.click(openButtonElement);
+        await act(async () => {
+            fireEvent.input(inputElement, { target: { value: 'TEST' } });
+            jest.advanceTimersByTime(1000);
+            await Promise.resolve(); // Flush promises
+        });
+
+        expect(apiService.getSuggestions).toHaveBeenCalledWith('TEST');
+        expect(suggestionsListElement).toHaveTextContent('suggestion1');
+        expect(suggestionsListElement).toHaveTextContent('suggestion2');
+    });
+
     test('loading indicator should be shown and hidden during suggestion fetch', async () => {
         let resolvePromise;
         const promise = new Promise(resolve => {

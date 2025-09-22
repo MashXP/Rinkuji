@@ -25,7 +25,7 @@ describe('API Service', () => {
             });
 
             const result = await apiService.getLocalSuggestions('test');
-            expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?query=test');
+            expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?q=test');
             expect(result).toEqual(mockResponse);
         });
 
@@ -133,7 +133,7 @@ describe('API Service', () => {
 
             const result = await apiService.getSuggestions('test');
             expect(result).toEqual(['local1', 'local2', 'jishoW1', 'jishoW2']);
-            expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?query=test');
+            expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?q=test');
             expect(global.fetch).toHaveBeenCalledWith('/search_words?query=test');
             expect(global.fetch).toHaveBeenCalledTimes(2);
         });
@@ -146,7 +146,7 @@ describe('API Service', () => {
 
             const result = await apiService.getSuggestions('日');
             expect(result).toEqual(['日']);
-            expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?query=%E6%97%A5');
+            expect(global.fetch).toHaveBeenCalledWith('/api/suggestions?q=%E6%97%A5');
             expect(global.fetch).toHaveBeenCalledWith('/search_words?query=%E6%97%A5');
             expect(global.fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=%E6%97%A5');
             expect(global.fetch).toHaveBeenCalledTimes(3);

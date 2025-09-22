@@ -22,19 +22,28 @@ def get_suggestions():
     if 'q' not in request.args: # Check if 'q' parameter is missing
         return jsonify({'error': 'Query parameter "q" is required.'}), 400
 
-    query = request.args.get('q', '')
+    query = request.args.get('q', '').lower()
     if not query: # Handle empty query string
         return jsonify([]), 200
 
-    # Filter English meanings from the loaded data
-    # Assuming each entry in DATA has an 'meanings' field which is a list of strings
-    # And each meaning might contain English words
-    english_suggestions = []
+    suggestions = []
     for entry in DATA:
-        if 'meaning' in entry and isinstance(entry['meaning'], list):
-            for meaning in entry['meaning']:
-                if isinstance(meaning, str) and query.lower() in meaning.lower():
-                    english_suggestions.append(meaning)
-    
-    # Limit to a reasonable number of suggestions
-    return jsonify(list(set(english_suggestions))[:10]), 200 # Return unique suggestions, limited to 10
+        # Search in 'text' field
+        if 'text' in entry and isinstance(entry['text'], str) and query in entry['text'].lower():
+            suggestions.append(entry['text'])
+
+        # Search in 'reading' field
+        if 'reading' in entry and isinstance(entry['reading'], str) and query in entry['reading'].lower():
+            suggestions.append(entry['reading'])
+
+        # Search in 'meaning' field (can be a string or a list of strings)
+        if 'meaning' in entry:
+            if isinstance(entry['meaning'], str) and query in entry['meaning'].lower():
+                suggestions.append(entry['meaning'])
+            elif isinstance(entry['meaning'], list):
+                for meaning in entry['meaning']:
+                    if isinstance(meaning, str) and query in meaning.lower():
+                        suggestions.append(meaning)
+
+    # Limit to a reasonable number of unique suggestions
+    return jsonify(list(set(suggestions))[:10]), 200
