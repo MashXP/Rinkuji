@@ -47,3 +47,10 @@
 .changelog-content-display li {
     margin-bottom: 5px;
 }
+
+.about-page-logo {
+    display: block;
+    max-width: 60%;
+    height: auto;
+    margin: 20px auto;
+}
