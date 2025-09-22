@@ -1,6 +1,15 @@
 # Changelog
 
-## [1.0.2] - 2025-09-23
+## [1.0.3] - 2025-09-22
+#### Changed
+- **Search**: Enhanced suggestion retrieval to be case-insensitive and to search across more data fields for more comprehensive results.
+- **Search**: Improved Jisho API fetching to filter for relevant Japanese words containing Kanji.
+#### Added
+- **UI**: Added a styled "No results found" message to the search suggestions list for better user feedback.
+#### Fixed
+- Removed a debug console log from the `NodeMovementManager`.
+
+## [1.0.2] - 2025-09-22
 #### Changed
 - **Test Coverage**: Increased backend and frontend test coverage.
 
