@@ -30,10 +30,15 @@ To run the backend tests, ensure you are in the project root directory and use t
     ```bash
     pip install -r backend/requirements.txt
     ```
-2.  **Run all tests:**
-    ```bash
-    cd backend && pytest
-    ```
+2.  **Run tests:**
+    *   **Run all tests:**
+        ```bash
+        cd backend && pytest
+        ```
+    *   **Run tests with coverage:**
+        ```bash
+        cd backend && pytest --cov=src
+        ```
 
 ### Running the Application Locally
 

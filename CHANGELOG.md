@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.2] - 2025-09-23
+#### Changed
+- **Test Coverage**: Increased backend and frontend test coverage.
+
 ## [1.0.1] - 2025-09-22
 #### Added
 - **Mobile Responsiveness**: Make the application usable on mobile devices.
