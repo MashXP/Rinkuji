@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.4] - 2025-09-24
+#### Added
+- **Consolidated Kanji View**: Implemented a consolidated view for kanjis with multiple entries from Jisho.
+- **Meaning Buttons**: Added toggleable number buttons to the meaning bar for consolidated kanjis, allowing users to switch between different readings.
+#### Changed
+- **Jisho Service**: Modified the backend `JishoService` to correctly consolidate kanji entries based on base slugs and include all readings and meanings.
+- **Graph Display**: Updated the frontend `RinkuGraph` component to correctly identify and display consolidated kanji nodes.
+- **Meaning Display**: Enhanced the `MeaningDisplayManager` to display readings and handle the new button-based meaning selection for consolidated kanjis.
+
 ## [1.0.3] - 2025-09-22
 #### Changed
 - **Search**: Enhanced suggestion retrieval to be case-insensitive and to search across more data fields for more comprehensive results.
