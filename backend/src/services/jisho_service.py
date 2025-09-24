@@ -26,7 +26,34 @@ class JishoService:
         try:
             response = requests.get(api_url)
             response.raise_for_status()
-            return response.json(), 200
+            data = response.json()
+
+            processed_results = {}
+            for result in data.get("data", []):
+                slug = result.get("slug")
+                base_slug = slug.split('-')[0]
+
+                if base_slug not in processed_results:
+                    processed_results[base_slug] = []
+                processed_results[base_slug].append(result)
+
+            final_results = []
+            for base_slug, results in processed_results.items():
+                if len(results) > 1:
+                    # This is a consolidated kanji
+                    final_results.append({
+                        "slug": base_slug,
+                        # The frontend will now extract meanings and readings from consolidated_members
+                        "meanings": [res.get("senses", [{}])[0].get("english_definitions", [])[0] or "" for res in results],
+                        "readings": [jp.get("reading") for res in results for jp in res.get("japanese", []) if jp.get("reading")],
+                        "is_consolidated": True,
+                        "consolidated_members": results # Store the original results here
+                    })
+                else:
+                    # This is a normal word
+                    final_results.append(results[0])
+
+            return {"data": final_results}, 200
         except requests.exceptions.RequestException as e:
             print(f"Error fetching from Jisho API: {e}")
             return {"error": "Failed to fetch data from the external API."}, 502

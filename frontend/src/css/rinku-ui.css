@@ -303,6 +303,31 @@
     line-height: 1.4;
 }
 
+.meaning-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.meaning-button {
+    background: none;
+    border: none;
+    color: #ecf0f1;
+    cursor: pointer;
+    font-size: 1em;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.meaning-button:hover {
+    color: var(--highlight-color);
+}
+
+.meaning-button.active {
+    color: var(--highlight-color);
+    font-weight: bold;
+}
+
 /* --- Meaning Bar Scrollbar --- */
 .meaning-definition::-webkit-scrollbar {
     width: 8px;

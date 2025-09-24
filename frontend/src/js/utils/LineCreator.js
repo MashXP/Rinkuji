@@ -15,11 +15,11 @@ export class LineCreator {
      * @returns {SVGLineElement} The created SVG line element.
      */
     createExpansionLine(sourcePos, targetPos) {
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', sourcePos.ux);
-        line.setAttribute('y1', sourcePos.uy);
-        line.setAttribute('x2', targetPos.ux);
-        line.setAttribute('y2', targetPos.uy);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line'); // prettier-ignore
+        line.setAttribute('x1', sourcePos.ux || 0);
+        line.setAttribute('y1', sourcePos.uy || 0);
+        line.setAttribute('x2', targetPos.ux || 0);
+        line.setAttribute('y2', targetPos.uy || 0);
         line.classList.add('expansion-line');
         this.svgLayer.appendChild(line);
         return line;

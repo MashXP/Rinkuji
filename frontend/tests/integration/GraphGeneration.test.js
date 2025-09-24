@@ -1,5 +1,6 @@
 import { RinkuGraph } from '../../src/js/components/RinkuGraph.js';
 import { PanZoom } from '../../src/js/utils/PanZoom.js';
+import { waitFor } from '@testing-library/dom';
 
 // Mock fetch, which is what RinkuGraph actually uses for expansion
 global.fetch = jest.fn();
@@ -149,5 +150,45 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
         expect(nodesContainer.children.length).toBe(0);
 
         consoleErrorSpy.mockRestore();
+    });
+
+    test('should display a single node with multiple meanings for a consolidated kanji', async () => { // prettier-ignore
+        const clickedKanjiSpan = Array.from(wordContainer.querySelectorAll('.kanji-char')).find(s => s.textContent === '日');
+        expect(clickedKanjiSpan).not.toBeNull();
+
+        const consolidatedKanjiResponse = {
+            data: [
+                {
+                    slug: '日',
+                    is_consolidated: true,
+                    // Use the full data structure the frontend expects
+                    consolidated_members: [
+                        { slug: '日-1', japanese: [{ reading: 'nichi' }], senses: [{ english_definitions: ['day, sun'] }] },
+                        { slug: '日-2', japanese: [{ reading: 'nippon' }], senses: [{ english_definitions: ['Japan'] }] }
+                    ]
+                }
+            ]
+        };
+
+        global.fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve(consolidatedKanjiResponse),
+        });
+
+        await rinkuGraph.handleKanjiClick({ currentTarget: clickedKanjiSpan });
+
+        expect(nodesContainer.children.length).toBe(1);
+        const node = nodesContainer.querySelector('[data-word-slug="日"]');
+        expect(node).not.toBeNull();
+
+        // Simulate a click on the new node to show its meaning.
+        node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        await waitFor(() => {
+            const meaningButtons = document.querySelectorAll('#meaningBar .meaning-button');
+            expect(meaningButtons.length).toBe(2);
+            expect(meaningButtons[0].textContent).toBe('1');
+            expect(meaningButtons[1].textContent).toBe('2');
+        });
     });
 });

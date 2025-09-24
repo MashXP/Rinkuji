@@ -120,6 +120,79 @@ describe('MeaningDisplayManager', () => {
         });
     });
 
+    describe('displayConsolidatedMeaning', () => {
+        const mockConsolidatedData = {
+            is_consolidated: true,
+            consolidated_members: [
+                { slug: '日-1', japanese: [{ reading: 'nichi' }], senses: [{ english_definitions: ['day, sun'] }] },
+                { slug: '日-2', japanese: [{ reading: 'nippon' }], senses: [{ english_definitions: ['Japan'] }] }
+            ]
+        };
+
+        const mockConsolidatedData_4_members = {
+            is_consolidated: true,
+            consolidated_members: [
+                { slug: '日-1', japanese: [{ reading: 'nichi' }], senses: [{ english_definitions: ['day, sun'] }] },
+                { slug: '日-2', japanese: [{ reading: 'nippon' }], senses: [{ english_definitions: ['Japan'] }] },
+                { slug: '日-3', japanese: [{ reading: 'jitsu' }], senses: [{ english_definitions: ['Sunday'] }] },
+                { slug: '日-4', japanese: [{ reading: 'hi' }], senses: [{ english_definitions: ['holiday'] }] }
+            ]
+        };
+
+        test('should display consolidated meaning with buttons', () => {
+            manager.displayConsolidatedMeaning('日', mockConsolidatedData);
+
+            expect(meaningBar.querySelector('.meaning-word').textContent).toBe('日');
+            const buttons = meaningBar.querySelectorAll('.meaning-button');
+            expect(buttons.length).toBe(2);
+            expect(buttons[0].textContent).toBe('1');
+            expect(buttons[1].textContent).toBe('2');
+            expect(meaningBar.querySelector('.meaning-definition').innerHTML).toContain('day, sun');
+            expect(buttons[0].classList.contains('active')).toBe(true); // First button should be active
+        });
+
+        test("should display '... ' button if there are more than 3 meanings", () => {
+            manager.displayConsolidatedMeaning('日', mockConsolidatedData_4_members);
+
+            const buttons = meaningBar.querySelectorAll('.meaning-button');
+            expect(buttons.length).toBe(4);
+            expect(buttons[3].textContent).toBe('...');
+            expect(buttons[3].href).toContain('https://jisho.org/search/%E6%97%A5');
+        });
+
+        test('should change meaning and reading on button click', () => {
+            manager.displayConsolidatedMeaning('日', mockConsolidatedData);
+
+            const buttons = meaningBar.querySelectorAll('.meaning-button');
+            buttons[1].click();
+
+            expect(meaningBar.querySelector('.meaning-reading').innerHTML).toBe('nippon');
+            expect(meaningBar.querySelector('.meaning-definition').innerHTML).toContain('Japan');
+        });
+
+        test('should toggle active class on button click', () => {
+            manager.displayConsolidatedMeaning('日', mockConsolidatedData);
+
+            const buttons = meaningBar.querySelectorAll('.meaning-button[data-member-index]');
+            const button1 = buttons[0];
+            const button2 = buttons[1];
+
+            // Initial state
+            expect(button1.classList.contains('active')).toBe(true);
+            expect(button2.classList.contains('active')).toBe(false);
+
+            // Click second button
+            button2.click();
+            expect(button1.classList.contains('active')).toBe(false);
+            expect(button2.classList.contains('active')).toBe(true);
+
+            // Click first button again
+            button1.click();
+            expect(button1.classList.contains('active')).toBe(true);
+            expect(button2.classList.contains('active')).toBe(false);
+        });
+    });
+
     describe('hideMeaning', () => {
         test('should remove visible class from meaning bar', () => {
             meaningBar.classList.add('visible');

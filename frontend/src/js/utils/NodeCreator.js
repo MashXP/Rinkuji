@@ -25,9 +25,10 @@ export class NodeCreator {
      * @param {string} wordString - The word slug for the node.
      * @param {string} sourceKanji - The Kanji character that created this node.
      * @param {SVGLineElement} lineElement - The SVG line connecting to this node.
+     * @param {string} [displayString] - Optional. The string to display in the node. Defaults to wordString if not provided.
      * @returns {HTMLElement} The created node element.
      */
-    createWordNode(wordString, sourceKanji, lineElement) {
+    createWordNode(wordString, sourceKanji, lineElement, displayString = wordString) {
         const node = document.createElement('div');
         node.classList.add('expanded-node');
         node.dataset.wordSlug = wordString;
@@ -57,7 +58,7 @@ export class NodeCreator {
             }
         });
 
-        wordString.split('').forEach(char => {
+        displayString.split('').forEach(char => {
             const charSpan = document.createElement('span');
             charSpan.textContent = char;
 

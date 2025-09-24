@@ -1,12 +1,6 @@
-from flask import Blueprint, request, jsonify # pyright: ignore[reportMissingImports]
-from backend.src.services.graph_service import GraphService
+from flask import Blueprint, request, jsonify, current_app # pyright: ignore[reportMissingImports]
 
 graph_bp = Blueprint('graph', __name__)
-graph_service = GraphService()
-words = graph_service.data_loader.load_data()
-words_map = {word.text: word for word in words}
-all_kanji = graph_service.data_loader.get_all_kanji(words)
-
 
 @graph_bp.route('/graph', methods=['GET'])
 def get_graph():
@@ -14,11 +8,14 @@ def get_graph():
     if not word_text:
         return jsonify({"error": "Missing 'word' parameter"}), 400
 
+    words = current_app.data_loader.load_data()
+    words_map = {word.text: word for word in words}
+
     target_word = words_map.get(word_text)
     if not target_word:
         return jsonify({"error": f"Word '{word_text}' not found."}), 404
 
-    graph = graph_service.generate_graph([target_word])
+    graph = current_app.graph_service.generate_graph([target_word])
     return jsonify(graph)
 
 
@@ -27,6 +24,8 @@ def get_kanji_details():
     character = request.args.get('character')
     if not character:
         return jsonify({"error": "Missing 'character' parameter"}), 400
+
+    all_kanji = current_app.data_loader.get_all_kanji(current_app.data_loader.load_data())
 
     # This is inefficient, but for now it will work.
     # A better approach would be to have a map of kanji characters to kanji objects.

@@ -21,8 +21,8 @@ def create_app():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data_file_path = os.path.join(current_dir, 'data.json')
     app.data_loader = DataLoaderService(data_file_path=data_file_path)
-    app.graph_service = GraphService()
     app.jisho_service = JishoService()
+    app.graph_service = GraphService(app.jisho_service)
 
     # Register blueprints
     app.register_blueprint(graph_bp) # Register the graph blueprint here

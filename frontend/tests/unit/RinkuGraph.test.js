@@ -346,26 +346,26 @@ describe('RinkuGraph', () => {
     describe('_selectWordsToDisplay', () => {
         test('should return all words if count is less than or equal to max', () => {
             const words = [{ slug: 'a' }, { slug: 'b' }];
-            rinkuGraph.MAX_WORDS_TO_DISPLAY = 3;
-            const result = rinkuGraph._selectWordsToDisplay(words, 'c');
+            const limit = 3;
+            const result = rinkuGraph._selectWordsToDisplay(words, 'c', limit);
             expect(result).toEqual(words);
         });
 
         test('should select random words if kanji-as-word is not present', () => {
             const words = [{ slug: 'a' }, { slug: 'b' }, { slug: 'c' }, { slug: 'd' }];
-            rinkuGraph.MAX_WORDS_TO_DISPLAY = 2;
+            const limit = 2;
             // Mock shuffle to be deterministic
             jest.spyOn(rinkuGraph, '_shuffleArray').mockImplementation(arr => arr.reverse());
-            const result = rinkuGraph._selectWordsToDisplay(words, 'e'); // 'e' is not in words
+            const result = rinkuGraph._selectWordsToDisplay(words, 'e', limit); // 'e' is not in words
             expect(result.length).toBe(2);
             expect(result).toEqual([{ slug: 'd' }, { slug: 'c' }]);
         });
 
         test('should prioritize kanji-as-word and fill remaining slots', () => {
             const words = [{ slug: 'a' }, { slug: 'b' }, { slug: 'c' }, { slug: 'd' }];
-            rinkuGraph.MAX_WORDS_TO_DISPLAY = 3;
+            const limit = 3;
             jest.spyOn(rinkuGraph, '_shuffleArray').mockImplementation(arr => arr.reverse());
-            const result = rinkuGraph._selectWordsToDisplay(words, 'c');
+            const result = rinkuGraph._selectWordsToDisplay(words, 'c', limit);
             expect(result.length).toBe(3);
             expect(result.some(w => w.slug === 'c')).toBe(true);
             // The other words should be from the shuffled list

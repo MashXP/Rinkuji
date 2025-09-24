@@ -70,5 +70,30 @@ class TestJishoService(unittest.TestCase):
         self.assertEqual(response["error"], "Failed to fetch data from the external API.")
         mock_get.assert_called_once_with(f"{self.jisho_service.JISHO_API_URL}?keyword=日")
 
+    @patch('requests.get')
+    def test_search_by_kanji_consolidates_similar_kanjis(self, mock_get):
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": [
+                {
+                    "slug": "日-1",
+                    "senses": [{"english_definitions": ["day, sun"]}]
+                },
+                {
+                    "slug": "日-2",
+                    "senses": [{"english_definitions": ["Japan"]}]
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        response, status = self.jisho_service.search_by_kanji("日")
+        self.assertEqual(status, 200)
+        self.assertEqual(len(response["data"]), 1)
+        self.assertEqual(response["data"][0]["slug"], "日")
+        self.assertEqual(len(response["data"][0]["meanings"]), 2)
+        self.assertTrue(response["data"][0]["is_consolidated"])
+
 if __name__ == '__main__':
     unittest.main()

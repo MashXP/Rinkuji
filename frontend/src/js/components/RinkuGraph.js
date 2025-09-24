@@ -94,6 +94,7 @@ export class RinkuGraph extends CanvasComponent {
         this.nodeDuplicator = new NodeDuplicator(
             this.wordContainer,
             this.kanjiRegex,
+            // prettier-ignore
             this.kanjiSidebar,
             this.nodeCreator,
             this.lineCreator,
@@ -182,23 +183,24 @@ export class RinkuGraph extends CanvasComponent {
         return expandedKanjiCount > 1;
     }
 
-    _selectWordsToDisplay(relatedWords, kanjiChar) {
-        if (relatedWords.length <= this.MAX_WORDS_TO_DISPLAY) {
+    _selectWordsToDisplay(relatedWords, kanjiChar, limit) {
+        if (relatedWords.length <= limit) {
             return relatedWords;
         }
 
-        // We have more than MAX_WORDS_TO_DISPLAY words, so we need to select.
+        // We have more words than available slots, so we need to select.
         // Prioritize showing the single-kanji word if it exists.
         const kanjiAsWord = relatedWords.find(word => word.slug === kanjiChar);
         const otherWords = relatedWords.filter(word => word.slug !== kanjiChar);
         this._shuffleArray(otherWords);
 
         let wordsToDisplay = [];
-        if (kanjiAsWord) {
+        // Only add the prioritized word if there's space
+        if (kanjiAsWord && wordsToDisplay.length < limit) {
             wordsToDisplay.push(kanjiAsWord);
         }
 
-        const remainingSlots = this.MAX_WORDS_TO_DISPLAY - wordsToDisplay.length;
+        const remainingSlots = limit - wordsToDisplay.length;
         wordsToDisplay.push(...otherWords.slice(0, remainingSlots));
 
         return wordsToDisplay;
@@ -212,22 +214,42 @@ export class RinkuGraph extends CanvasComponent {
         const relatedWords = await this.fetchRelatedWords(kanjiChar);
 
         if (relatedWords.length > 0) {
-            if (relatedWords.length > this.MAX_WORDS_TO_DISPLAY) {
+            // Separate consolidated kanji from regular words
+            const consolidatedKanji = relatedWords.find(item => item.is_consolidated);
+            const regularWords = relatedWords.filter(item => !item.is_consolidated);
+
+            let wordsToDisplay = [];
+
+            // If a consolidated kanji exists, add it to the display list
+            if (consolidatedKanji) {
+                wordsToDisplay.push(consolidatedKanji);
+            }
+
+            // If there are more words than display slots, mark the source for rerandomization
+            if (regularWords.length > this.MAX_WORDS_TO_DISPLAY - wordsToDisplay.length) {
                 kanjiElement.dataset.hasMoreWords = 'true';
             }
-            const wordsToDisplay = this._selectWordsToDisplay(relatedWords, kanjiChar);
+
+            // Determine how many regular words we can display.
+            const slotsForRegularWords = this.MAX_WORDS_TO_DISPLAY - wordsToDisplay.length;
+
+            // Select random regular words to fill the remaining slots
+            const selectedRegularWords = this._selectWordsToDisplay(regularWords, kanjiChar, slotsForRegularWords);
+            wordsToDisplay.push(...selectedRegularWords);
+
             this._focusKanji(kanjiElement);
             this.drawExpansion(kanjiElement, kanjiChar, wordsToDisplay);
             this._updateSourceKanjiState(kanjiElement, 'active-source-kanji');
             this.kanjiSidebar.addKanji(kanjiChar, parentNode); // Will not add if already present
-            console.log(`Expanded ${kanjiChar} with ${wordsToDisplay.length} words.`);
         } else {
-            console.log(`Kanji ${kanjiChar} has no new expansions. Marking as expanded-parent-kanji.`);
+            // No new words found, mark the kanji as fully expanded for now.
             this._updateSourceKanjiState(kanjiElement, 'expanded-parent-kanji');
         }
 
         this._updateParentVisibilityAfterExpansion(parentNode);
     }
+
+    
 
     _updateSourceKanjiState(kanjiElement, newClass) {
         kanjiElement.classList.remove('kanji-char');
@@ -331,7 +353,6 @@ export class RinkuGraph extends CanvasComponent {
             }
             const results = await response.json();
             console.log(`API response for ${kanjiChar}:`, results);
-
             const existingSlugs = new Set(Array.from(this.nodesContainer.querySelectorAll('[data-word-slug]')).map(n => n.dataset.wordSlug));
             existingSlugs.add(this.word);
 
@@ -407,6 +428,11 @@ export class RinkuGraph extends CanvasComponent {
 
             const line = this.lineCreator.createExpansionLine(sourcePos, nodePos);
             const node = this.nodeCreator.createWordNode(wordData.slug, sourceKanji, line);
+            
+            // Store consolidated data on the node element itself for later access
+            if (wordData.is_consolidated) {
+                node.dataset.consolidatedData = JSON.stringify(wordData);
+            }
 
             if (parentNode.dataset.filterType) {
                 this.nodeFilterManager.applyInheritedFilter(node, line, parentNode.dataset.filterType, parentNode.dataset.filterClickedKanji);
@@ -429,7 +455,14 @@ export class RinkuGraph extends CanvasComponent {
         if (e.target.tagName === 'SPAN' && this.kanjiRegex.test(e.target.textContent)) {
             return;
         }
-        this.meaningDisplayManager.showMeaning(node.dataset.wordSlug || this.word);
+
+        // Check if the node has consolidated data
+        if (node.dataset.consolidatedData) {
+            const consolidatedData = JSON.parse(node.dataset.consolidatedData);
+            this.meaningDisplayManager.showMeaning(consolidatedData.slug, consolidatedData);
+        } else {
+            this.meaningDisplayManager.showMeaning(node.dataset.wordSlug || this.word);
+        }
     }
     /**
      * Clears the currently active selection circle from the SVG layer and resets its state.

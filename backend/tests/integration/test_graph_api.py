@@ -37,3 +37,11 @@ def test_kanji_details_api_returns_data(client):
     assert "on_reading" in data
     assert "kun_reading" in data
     assert "components" in data
+
+def test_graph_api_consolidates_similar_kanjis(client):
+    response = client.get("/graph?word=日本語")
+    assert response.status_code == 200
+    data = response.get_json()
+    kanji_node = [node for node in data["nodes"] if node["id"] == "日"][0]
+    assert kanji_node is not None
+    assert len(kanji_node["meanings"]) > 1
