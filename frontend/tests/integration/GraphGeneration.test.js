@@ -22,7 +22,7 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
         jest.clearAllMocks();
         document.body.innerHTML = `
             <div id="viewport"></div>
-            <canvas id="canvas"></canvas>
+            <canvas id="canvas"></canvas> 
             <div id="wordContainer" data-word="日本語" data-word-slug="日本語"></div>
             <svg id="svgLayer"></svg>
             <div id="nodesContainer"></div>
@@ -106,7 +106,7 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
         });
 
         // Trigger the click event
-        await rinkuGraph.handleKanjiClick({ currentTarget: clickedKanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: clickedKanjiSpan });
 
         // Assertions
         expect(global.fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=%E6%97%A5');
@@ -129,7 +129,7 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
             json: () => Promise.resolve({ data: [] }),
         });
 
-        await rinkuGraph.handleKanjiClick({ currentTarget: clickedKanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: clickedKanjiSpan });
 
         expect(global.fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=%E6%97%A5');
         expect(clickedKanjiSpan.classList.contains('expanded-parent-kanji')).toBe(true);
@@ -143,7 +143,7 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
 
         global.fetch.mockResolvedValue({ ok: false, status: 500 });
 
-        await rinkuGraph.handleKanjiClick({ currentTarget: clickedKanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: clickedKanjiSpan });
 
         expect(global.fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=%E6%97%A5');
         expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to expand kanji:', expect.any(Error));
@@ -175,7 +175,7 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
             json: () => Promise.resolve(consolidatedKanjiResponse),
         });
 
-        await rinkuGraph.handleKanjiClick({ currentTarget: clickedKanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: clickedKanjiSpan });
 
         expect(nodesContainer.children.length).toBe(1);
         const node = nodesContainer.querySelector('[data-word-slug="日"]');

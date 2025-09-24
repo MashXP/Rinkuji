@@ -1,5 +1,7 @@
 import { RinkuGraph } from '../../src/js/components/RinkuGraph.js';
 import { PanZoom } from '../../src/js/utils/PanZoom.js';
+import { GraphExpansionManager } from '../../src/js/components/GraphExpansionManager.js';
+import { waitFor } from '@testing-library/dom';
 import * as apiService from '@services/api.js';
 
 // Mock the API service
@@ -19,14 +21,14 @@ describe('Integration: Context Menu Functionality', () => {
     let parentKanjiSearchInput;
     let parentKanjiListContainer;
     let panZoomInstance;
-    let rinkuGraph;
+    let rinkuGraph; // Declare at the top level
     let nodeContextMenu;
 
     // Mock fetch as it's used directly by RinkuGraph
     global.fetch = jest.fn();
 
     beforeEach(async () => {
-        jest.clearAllMocks();
+        jest.clearAllMocks(); // Clear mocks before each test
         document.body.innerHTML = `
             <div id="viewport"></div>
             <canvas id="canvas"></canvas>
@@ -83,6 +85,7 @@ describe('Integration: Context Menu Functionality', () => {
         const zoomMeter = document.getElementById('zoomMeter');
         panZoomInstance = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
 
+        // Instantiate a fresh RinkuGraph for each test
         rinkuGraph = new RinkuGraph(
             viewport, canvas, wordContainer, svgLayer, nodesContainer,
             parentKanjiSidebar, parentKanjiSearchInput, parentKanjiListContainer, panZoomInstance
@@ -116,20 +119,16 @@ describe('Integration: Context Menu Functionality', () => {
         };
         global.fetch.mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve(relatedWordsResponse),
+            json: () => Promise.resolve(relatedWordsResponse)
         });
-        await rinkuGraph.handleKanjiClick({ currentTarget: kanjiSpan });
-
-        // Ensure nodes are created before interaction tests
-        const node1 = nodesContainer.querySelector('[data-word-slug="休日"]');
-        expect(node1).not.toBeNull();
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: kanjiSpan });
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    test('context menu should appear on right-click of a node and trigger collapse', () => {
+    test('context menu should appear on right-click of a node and trigger collapse', async () => {
         const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
         const collapseNodeSpy = jest.spyOn(rinkuGraph.nodeCollapseExpandManager, 'collapseNode');
 
@@ -155,7 +154,7 @@ describe('Integration: Context Menu Functionality', () => {
         collapseNodeSpy.mockRestore();
     });
 
-    test('context menu should appear on right-click of a kanji span and trigger filter', () => {
+    test('context menu should appear on right-click of a kanji span and trigger filter', async () => {
         const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
         const kanjiSpan = targetNode.querySelector('span'); // Assuming first span is a kanji
         const filterNodeContentSpy = jest.spyOn(rinkuGraph.nodeFilterManager, 'filterNodeContent');
@@ -182,7 +181,7 @@ describe('Integration: Context Menu Functionality', () => {
         filterNodeContentSpy.mockRestore();
     });
 
-    test('context menu should hide on document click outside menu', () => {
+    test('context menu should hide on document click outside menu', async () => {
         const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
 
         // Simulate right-click to show menu
@@ -201,25 +200,20 @@ describe('Integration: Context Menu Functionality', () => {
     });
 
     test('context menu should trigger rerandomize action and update nodes', async () => {
-        // In the beforeEach, we expanded '日' with 2 words.
-        // For this test, we need to re-run an expansion with more words to enable the randomize option.
+        // This test has complex state. Clear the containers to ensure no leakage from beforeEach.
+        // Spy on the prototype BEFORE the instance is created.
+        // This ensures that when RinkuGraph creates its GraphExpansionManager, the spy is already on the prototype.
+        const rerandomizeSpy = jest.spyOn(GraphExpansionManager.prototype, 'rerandomizeNode');
+
         nodesContainer.innerHTML = '';
-        svgLayer.innerHTML = '';
-        global.fetch.mockClear();
-
-        // Perform a full reset of the graph's initial state for this specific test
-        // to avoid state leakage from the beforeEach block.
         wordContainer.innerHTML = '';
-        wordContainer._children = [];
-        rinkuGraph.expandedElements.clear(); // Clear the set of expanded elements
-        rinkuGraph.kanjiSidebar.parentKanjiMap.clear();
+        wordContainer.dataset.word = '日本語'; // Set the word for the initializer
 
-        // Re-create the initial kanji span for the test
-        const kanjiSpan = document.createElement('span');
-        kanjiSpan.textContent = '日';
-        kanjiSpan.classList.add('kanji-char');
-        wordContainer.appendChild(kanjiSpan);
-        rinkuGraph._addKanjiEventListeners(kanjiSpan);
+        const rinkuGraph = new RinkuGraph(
+            viewport, canvas, wordContainer, svgLayer, nodesContainer,
+            parentKanjiSidebar, parentKanjiSearchInput, parentKanjiListContainer, panZoomInstance
+        );
+        const kanjiSpan = Array.from(wordContainer.querySelectorAll('.kanji-char')).find(s => s.textContent === '日');
 
         // 1. Mock initial expansion with >3 words to enable the randomize option
         const initialExpansionResponse = {
@@ -236,8 +230,8 @@ describe('Integration: Context Menu Functionality', () => {
         });
 
         // 2. Expand the node
-        await rinkuGraph.handleKanjiClick({ currentTarget: kanjiSpan });
-        expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(3);
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: kanjiSpan }); // This is correct, it's on the manager
+        expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(3); // MAX_WORDS_TO_DISPLAY is 3
         expect(kanjiSpan.dataset.hasMoreWords).toBe('true');
 
         // 3. Right-click the source kanji to show the context menu
@@ -262,26 +256,32 @@ describe('Integration: Context Menu Functionality', () => {
         expect(randomizeMenuItem.style.display).toBe('block');
  
         // 6. Click the "Randomize Children" menu item and wait for the async operation
-        const rerandomizeSpy = jest.spyOn(rinkuGraph, 'rerandomizeNode');
         randomizeMenuItem.click();
-        await rerandomizeSpy.mock.results[0].value; // Wait for the promise from rerandomizeNode to resolve
+        // Wait for the spied function to be called and its promise to resolve.
+        await waitFor(() => {
+            // Ensure the spy was called
+            expect(rerandomizeSpy).toHaveBeenCalled();
+        });
+        // Now, await the promise that the spy call returned
+        await rerandomizeSpy.mock.results[0].value;
 
         // 7. Assert that the DOM has been updated with the new nodes
-        // The original 3 nodes should be removed as they were unexpanded
+        // The original nodes should be removed as they were unexpanded
         expect(nodesContainer.querySelector('[data-word-slug="休日"]')).toBeNull();
         expect(nodesContainer.querySelector('[data-word-slug="毎日"]')).toBeNull();
         expect(nodesContainer.querySelector('[data-word-slug="日曜日"]')).toBeNull();
         // The new 2 nodes from the rerandomize response should be present
         expect(nodesContainer.querySelector('[data-word-slug="日本"]')).not.toBeNull();
         expect(nodesContainer.querySelector('[data-word-slug="平日"]')).not.toBeNull();
-        expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(2);
+        expect(nodesContainer.querySelectorAll('.expanded-node').length).toBe(2); // We expect 2 new nodes
+        rerandomizeSpy.mockRestore();
     });
 
-    test('should show context menu on tap-and-hold on a node', () => {
+    test('should show context menu on tap-and-hold on a node', async () => {
         jest.useFakeTimers();
         const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
+        expect(targetNode).not.toBeNull(); // Add an assertion to ensure setup is correct
 
-        // Simulate tap-and-hold
         targetNode.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [{ clientX: 100, clientY: 100 }] }));
         jest.advanceTimersByTime(500); // Advance time to trigger the long-press timeout
 

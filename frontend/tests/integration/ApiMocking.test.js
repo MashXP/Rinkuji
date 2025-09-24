@@ -123,7 +123,7 @@ describe('Integration: API Mocking', () => {
         wordContainer._children = []; // Initialize _children for the test
         rinkuGraph._addKanjiEventListeners(kanjiSpan);
 
-        await rinkuGraph.handleKanjiClick({ currentTarget: kanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: kanjiSpan });
 
         expect(fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=%E6%97%A5');
         expect(nodesContainer.querySelector('[data-word-slug="mockRelated1"]')).not.toBeNull();
@@ -143,7 +143,7 @@ describe('Integration: API Mocking', () => {
         wordContainer.appendChild(kanjiSpan);
         rinkuGraph._addKanjiEventListeners(kanjiSpan);
 
-        await rinkuGraph.handleKanjiClick({ currentTarget: kanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: kanjiSpan });
 
         expect(fetch).toHaveBeenCalledWith('/search_by_kanji?kanji=%E6%97%A5');
         expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to expand kanji:", new Error('API error for 日: 500'));

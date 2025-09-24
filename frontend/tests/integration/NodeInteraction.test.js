@@ -109,7 +109,7 @@ describe('Integration: Node Interaction (Collapse/Expand, Movement)', () => {
             ok: true,
             json: () => Promise.resolve(relatedWordsResponse),
         });
-        await rinkuGraph.handleKanjiClick({ currentTarget: kanjiSpan });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: kanjiSpan });
 
         // Ensure nodes are created before interaction tests
         const node1 = nodesContainer.querySelector('[data-word-slug="休日"]');
@@ -199,5 +199,46 @@ describe('Integration: Node Interaction (Collapse/Expand, Movement)', () => {
         expect(targetNode.dataset.hidden).toBeUndefined();
         expect(targetNode.style.display).toBe('');
         expect(childNode.style.display).toBe(''); // Child should be visible again
+    });
+
+    test('should make a hidden mixed-content parent visible upon child expansion', async () => {
+        // 1. Setup: Create a new node structure for this specific test
+        nodesContainer.innerHTML = ''; // Clear existing nodes
+        const parentNode = rinkuGraph.nodeCreator.createWordNode('親node', '親', null);
+        const mixedContentChild = rinkuGraph.nodeCreator.createWordNode('日本go', '日', null);
+
+        // Manually link them
+        parentNode._children = [mixedContentChild];
+        mixedContentChild._parent = parentNode;
+        mixedContentChild._children = []; // Start with no children so it gets hidden
+
+        nodesContainer.appendChild(parentNode);
+        nodesContainer.appendChild(mixedContentChild);
+
+        // 2. Apply a 'kanji' filter from the grandparent, which will hide the mixed-content child
+        rinkuGraph.nodeFilterManager.filterNodeContent(parentNode, 'kanji');
+        jest.runAllTimers(); // Run timers for setNodeVisibility
+
+        // Verify initial state: mixed-content child is hidden
+        expect(mixedContentChild.classList.contains('node-hidden-by-filter')).toBe(true);
+        expect(mixedContentChild.style.display).toBe('none');
+
+        // 3. Expand a kanji on the hidden mixed-content node.
+        // This simulates a scenario where a child is added to the hidden node.
+        // We add the child here to simulate the expansion.
+        const kanjiGrandchild = rinkuGraph.nodeCreator.createWordNode('語', '語', null);
+        kanjiGrandchild._parent = mixedContentChild;
+        mixedContentChild._children.push(kanjiGrandchild);
+
+        // We can directly call the function that gets called after expansion.
+        // This is the key to covering the function in RinkuGraph.js.
+        const _updateParentVisibilitySpy = jest.spyOn(rinkuGraph, '_updateParentVisibilityAfterExpansion');
+        rinkuGraph._updateParentVisibilityAfterExpansion(mixedContentChild);
+
+        // 4. Assert that the function was called and the node is now visible
+        expect(_updateParentVisibilitySpy).toHaveBeenCalledWith(mixedContentChild);
+        expect(mixedContentChild.classList.contains('node-hidden-by-filter')).toBe(false);
+        expect(mixedContentChild.classList.contains('mixed-content-node')).toBe(true);
+        expect(mixedContentChild.style.display).toBe(''); // It should now be visible
     });
 });

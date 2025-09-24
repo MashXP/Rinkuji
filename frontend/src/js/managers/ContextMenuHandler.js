@@ -143,7 +143,7 @@ export class ContextMenuHandler {
                 // The target kanji was stored on the button element itself
                 const targetKanji = e.target._targetKanji;
                 if (targetKanji) {
-                    this.rerandomizeNodeCallback(targetKanji);
+                    this.rerandomizeNodeCallback(targetKanji); // This now calls the method on the instance at click time
                 }
                 break;
         }
