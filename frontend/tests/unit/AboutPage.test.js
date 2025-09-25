@@ -169,7 +169,7 @@ describe('About Page Changelog Integration', () => {
     });
 
     test('should handle missing select or content display elements gracefully', async () => {
-        const mockChangelog = `## Version 1.0.0\n- Test`;
+        const mockChangelog = `## Version 1.0.0\n- Test\n## Version 0.9.0\n- Old`;
         fetch.mockResolvedValueOnce({
             ok: true,
             json: () => Promise.resolve({ changelog: mockChangelog }),
@@ -177,17 +177,24 @@ describe('About Page Changelog Integration', () => {
 
         await loadAndTrigger();
 
-        // Wait for the initial render
+        // Wait for the initial render and get the select element
         await waitFor(() => {
             expect(screen.getByRole('combobox')).toBeInTheDocument();
         });
+        const selectElement = screen.getByRole('combobox');
 
-        // Manually remove the elements that the change handler depends on
-        document.getElementById('changelog-version-select').remove();
-        document.getElementById('changelog-content-display').remove();
+        // Spy on getElementById to simulate the contentDisplay element being removed
+        // just before the event handler runs.
+        const getElementByIdSpy = jest.spyOn(document, 'getElementById').mockImplementation(id => {
+            if (id === 'changelog-content-display') return null;
+            return document.querySelector(`#${id}`); // Return the real element for other IDs
+        });
 
-        // The change handler should now be covered, but it will return early and not throw an error.
-        // We can't directly test the event handler, but this setup ensures the guard clause is hit.
-        // This test primarily serves to increase branch coverage.
+        // Trigger the change event. The handler should now execute its guard clause and return early.
+        fireEvent.change(selectElement, { target: { value: '1' } });
+
+        // Verify that the content was not updated, which proves the guard clause worked.
+        expect(marked.parse).toHaveBeenCalledTimes(1); // Should only have been called on initial render
+        getElementByIdSpy.mockRestore();
     });
 });
