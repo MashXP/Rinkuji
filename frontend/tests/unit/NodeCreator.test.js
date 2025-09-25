@@ -207,6 +207,34 @@ describe('NodeCreator', () => {
         expect(line.style.display).toBe('none');
     });
 
+    test('fadeInElements should hide node but not throw if line is null', () => {
+        const node = document.createElement('div');
+        node.classList.add('node-hidden-by-filter');
+
+        // Call with a null line. This covers the `else` branch of `if (line)`
+        // inside the `if (node.classList.contains('node-hidden-by-filter'))` block.
+        expect(() => nodeCreator.fadeInElements(node, null)).not.toThrow();
+
+        expect(node.style.opacity).toBe('0');
+        expect(node.style.display).toBe('none');
+    });
+
+    test('fadeInElements should fade in node but not throw if line is null', () => {
+        const node = document.createElement('div');
+        node.style.opacity = 0;
+
+        // Call with a null line. This covers the `else` branch of `if (line)`
+        // inside the `requestAnimationFrame` callback.
+        expect(() => nodeCreator.fadeInElements(node, null)).not.toThrow();
+
+        return new Promise(resolve => {
+            requestAnimationFrame(() => {
+                expect(node.style.opacity).toBe('1');
+                resolve();
+            });
+        });
+    });
+
     test('refineLineEndpoint should update line x2 and y2 attributes', () => {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x2', '0');

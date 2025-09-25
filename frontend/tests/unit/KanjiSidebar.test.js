@@ -228,6 +228,27 @@ describe('KanjiSidebar', () => {
         expect(centerViewCallback).not.toHaveBeenCalled();
     });
 
+    test('clicking a list item with a null node in the map should do nothing', () => {
+        // This test covers the `if (targetNode)` branch where targetNode is null.
+        // This can happen if a node is removed from the graph but the sidebar hasn't updated yet.
+        const kanjiWithNullNode = '幻';
+        kanjiSidebar.parentKanjiMap.set(kanjiWithNullNode, null);
+
+        // Update the list, which will create an item for '幻' with a null targetNode.
+        kanjiSidebar._updateList();
+
+        const listItem = kanjiListContainer.querySelector(`[data-kanji="${kanjiWithNullNode}"]`);
+        expect(listItem).not.toBeNull();
+
+        // Click the item. The event handler inside _updateList should now execute its `if (targetNode)`
+        // check, find it to be false, and do nothing.
+        listItem.click();
+
+        // Verify that no navigation actions were taken.
+        expect(focusKanjiCallback).not.toHaveBeenCalled();
+        expect(centerViewCallback).not.toHaveBeenCalled();
+    });
+
     test('context menu should appear on right click and hide on document click', () => {
         const mockNode = document.createElement('div');
         kanjiSidebar.addKanji('日', mockNode);

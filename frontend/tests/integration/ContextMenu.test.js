@@ -154,6 +154,35 @@ describe('Integration: Context Menu Functionality', () => {
         collapseNodeSpy.mockRestore();
     });
 
+    test('context menu should show expand option for a collapsed node and trigger expand', async () => {
+        const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
+        const expandNodeSpy = jest.spyOn(rinkuGraph.nodeCollapseExpandManager, 'expandNode');
+
+        // 1. Manually collapse the node first
+        rinkuGraph.nodeCollapseExpandManager.collapseNode(targetNode);
+        expect(targetNode.dataset.collapsed).toBe('true');
+
+        // 2. Simulate right-click on the now-collapsed node
+        const contextMenuEvent = new MouseEvent('contextmenu', {
+            clientX: 100,
+            clientY: 100,
+            bubbles: true,
+            cancelable: true,
+        });
+        targetNode.dispatchEvent(contextMenuEvent);
+
+        // 3. Verify the correct menu items are displayed
+        expect(nodeContextMenu.style.display).toBe('block');
+        expect(nodeContextMenu.querySelector('[data-action="collapse"]').style.display).toBe('none');
+        expect(nodeContextMenu.querySelector('[data-action="expand"]').style.display).toBe('block');
+
+        // 4. Simulate clicking the expand menu item
+        const expandMenuItem = nodeContextMenu.querySelector('[data-action="expand"]');
+        expandMenuItem.click();
+
+        expect(expandNodeSpy).toHaveBeenCalledWith(targetNode);
+    });
+
     test('context menu should appear on right-click of a kanji span and trigger filter', async () => {
         const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
         const kanjiSpan = targetNode.querySelector('span'); // Assuming first span is a kanji

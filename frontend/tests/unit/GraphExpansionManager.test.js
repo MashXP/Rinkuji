@@ -85,6 +85,18 @@ describe('GraphExpansionManager', () => {
             expect(mockGraph.fetchRelatedWords).not.toHaveBeenCalled(); // Should not proceed to normal expansion
         });
 
+        test('should call rerandomizeNode if kanji is an expanded parent and has more words', async () => {
+            const rerandomizeNodeSpy = jest.spyOn(expansionManager, 'rerandomizeNode').mockResolvedValue();
+            kanjiElement.classList.add('expanded-parent-kanji');
+            kanjiElement.classList.add('active-source-kanji');
+            kanjiElement.dataset.hasMoreWords = 'true';
+
+            await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
+
+            expect(rerandomizeNodeSpy).toHaveBeenCalledWith(kanjiElement);
+            expect(mockGraph.fetchRelatedWords).not.toHaveBeenCalled();
+        });
+
         test('should call duplicateAndExpandNode if _shouldDuplicateNode returns true', async () => {
             jest.spyOn(expansionManager, '_shouldDuplicateNode').mockReturnValue(true);
             await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
@@ -95,6 +107,19 @@ describe('GraphExpansionManager', () => {
             const performExpansionSpy = jest.spyOn(expansionManager, '_performExpansion').mockResolvedValue();
             await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
             expect(performExpansionSpy).toHaveBeenCalledWith(kanjiElement);
+        });
+
+        test('should catch and log errors from _performExpansion', async () => {
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const testError = new Error('Expansion failed');
+            // Make one of the methods inside _performExpansion throw an error
+            mockGraph.fetchRelatedWords.mockRejectedValue(testError);
+
+            await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
+
+            // Verify that the catch block was executed
+            expect(consoleErrorSpy).toHaveBeenCalledWith("An error occurred during kanji click handling:", testError);
+            consoleErrorSpy.mockRestore();
         });
     });
 

@@ -24,40 +24,41 @@ export class GraphLayoutManager {
             parentNode._sourceKanjiOffsetY = sourcePos.uy;
         }
 
-        const expansionRadius = 320; // 20rem * 16px/rem
+        const expansionRadius = 250;
         const numWords = words.length;
 
         // Determine the base direction vector
         let baseAngle;
         const grandparentNode = parentNode._parent;
+        const angles = []; // Initialize angles array here
 
         if (grandparentNode) {
+            // Existing "pitchfork" logic for subsequent expansions
             const grandparentPos = this.getUnscaledElementCenter(grandparentNode);
             const parentPos = this.getUnscaledElementCenter(parentNode);
             const dx = parentPos.ux - grandparentPos.ux;
             const dy = parentPos.uy - grandparentPos.uy;
-            baseAngle = Math.atan2(dy, dx);
+            baseAngle = Math.atan2(dy, dx); // Use the existing baseAngle declaration
+            const spreadAngle = Math.PI / 6; // 30 degrees
+
+            switch (numWords) {
+                case 1:
+                    angles.push(baseAngle);
+                    break;
+                case 2:
+                    angles.push(baseAngle - spreadAngle / 2, baseAngle + spreadAngle / 2);
+                    break;
+                default: // 3 or more
+                    angles.push(baseAngle - spreadAngle, baseAngle, baseAngle + spreadAngle);
+                    break;
+            }
         } else {
-            baseAngle = Math.PI / 2; // Default downwards
-        }
-
-        // Calculate angles for the "pitchfork" tines
-        const angles = [];
-        const spreadAngle = Math.PI / 6; // 30 degrees
-
-        switch (numWords) {
-            case 1:
-                angles.push(baseAngle);
-                break;
-            case 2:
-                angles.push(baseAngle - spreadAngle / 2);
-                angles.push(baseAngle + spreadAngle / 2);
-                break;
-            default: // 3 or more
-                angles.push(baseAngle - spreadAngle);
-                angles.push(baseAngle);
-                angles.push(baseAngle + spreadAngle);
-                break;
+            // New radial logic for the initial expansion from the root node
+            const angleStep = (2 * Math.PI) / numWords;
+            for (let i = 0; i < numWords; i++) {
+                // Start from the top ( -PI/2 ) and go clockwise
+                angles.push(-Math.PI / 2 + i * angleStep);
+            }
         }
 
         // Create nodes at the calculated positions

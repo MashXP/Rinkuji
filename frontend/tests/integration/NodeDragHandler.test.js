@@ -4,8 +4,11 @@ import { NodeDragHandler } from '../../src/js/utils/NodeDragHandler.js';
 describe('NodeDragHandler Touch Functionality', () => {
     let nodeDragHandler;
     let mockGetCanvasCoordinates;
-    let mockMoveNodeAndChildrenCallback;
     let testNode;
+    let mockStartSpringDragCallback;
+    let mockUpdateSpringDragTargetCallback;
+    let mockStopSpringDragCallback;
+    let mockStartGlideCallback;
 
     beforeEach(() => {
         document.body.innerHTML = `
@@ -17,14 +20,19 @@ describe('NodeDragHandler Touch Functionality', () => {
             ux: e.clientX || e.touches[0].clientX,
             uy: e.clientY || e.touches[0].clientY,
         }));
-        mockMoveNodeAndChildrenCallback = jest.fn((node, dx, dy) => {
-            const currentLeft = parseInt(node.style.left, 10);
-            const currentTop = parseInt(node.style.top, 10);
-            node.style.left = `${currentLeft + dx}px`;
-            node.style.top = `${currentTop + dy}px`;
-        });
 
-        nodeDragHandler = new NodeDragHandler(mockGetCanvasCoordinates, mockMoveNodeAndChildrenCallback);
+        mockStartSpringDragCallback = jest.fn();
+        mockUpdateSpringDragTargetCallback = jest.fn();
+        mockStopSpringDragCallback = jest.fn();
+        mockStartGlideCallback = jest.fn();
+
+        nodeDragHandler = new NodeDragHandler(
+            mockGetCanvasCoordinates,
+            mockStartSpringDragCallback,
+            mockUpdateSpringDragTargetCallback,
+            mockStopSpringDragCallback,
+            mockStartGlideCallback
+        );
         nodeDragHandler.addDragHandlersToNode(testNode);
     });
 
@@ -59,9 +67,8 @@ describe('NodeDragHandler Touch Functionality', () => {
         });
         document.dispatchEvent(mouseupEvent);
 
-        expect(mockMoveNodeAndChildrenCallback).toHaveBeenCalled();
-        expect(testNode.style.left).toBe('50px');
-        expect(testNode.style.top).toBe('20px');
+        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(testNode, 100, 100);
+        expect(mockUpdateSpringDragTargetCallback).toHaveBeenCalledWith(150, 120);
         expect(nodeDragHandler.hasDragOccurred()).toBe(true);
     });
 
@@ -91,9 +98,8 @@ describe('NodeDragHandler Touch Functionality', () => {
         });
         document.dispatchEvent(touchendEvent);
 
-        expect(mockMoveNodeAndChildrenCallback).toHaveBeenCalled();
-        expect(testNode.style.left).toBe('50px');
-        expect(testNode.style.top).toBe('20px');
+        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(testNode, 100, 100);
+        expect(mockUpdateSpringDragTargetCallback).toHaveBeenCalledWith(150, 120);
         expect(nodeDragHandler.hasDragOccurred()).toBe(true);
     });
 
@@ -124,7 +130,7 @@ describe('NodeDragHandler Touch Functionality', () => {
         });
         document.dispatchEvent(mouseupEvent);
 
-        expect(mockMoveNodeAndChildrenCallback).not.toHaveBeenCalled();
+        expect(mockStartSpringDragCallback).not.toHaveBeenCalled();
         expect(testNode.style.left).toBe('0px');
         expect(testNode.style.top).toBe('0px');
         expect(nodeDragHandler.hasDragOccurred()).toBe(false);

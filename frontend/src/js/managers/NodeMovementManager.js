@@ -6,13 +6,25 @@ export class NodeMovementManager {
     constructor(panZoom, graphState) {
         this.panZoom = panZoom;
         this.graphState = graphState; // Reference to RinkuGraph's state for selection circle
+
+        // Properties for the new spring-based interactive drag
+        this.isSpringDragging = false;
+        this.springTargetNode = null;
+        this.springTargetX = 0;
+        this.springTargetY = 0;
+        this.springAnimationId = null;
+        this.springGrabOffsetX = 0; // Offset from node center to cursor
+        this.springGrabOffsetY = 0;
     }
 
+    // ... (moveNodeAndChildren and other methods remain the same for now)
+    
     /**
      * Moves a node and all its descendants, updating their positions and connecting lines.
      * @param {HTMLElement} node - The node to move.
      * @param {number} dx - Change in X coordinate.
      * @param {number} dy - Change in Y coordinate.
+     * @param {number} [depth=0] - The depth of the node in the current move operation, for damping.
      */
     moveNodeAndChildren(node, dx, dy) {
         const currentX = parseFloat(node.style.left);
@@ -22,13 +34,12 @@ export class NodeMovementManager {
 
         node.style.left = `${newX}px`;
         node.style.top = `${newY}px`;
-
         this._updateIncomingLine(node, dx, dy);
 
         if (node._linkingLineToOriginal) {
             node._linkingLineToOriginal.setAttribute('x2', newX);
-            node._linkingLineToOriginal.setAttribute('y2', newY);
-        }
+            node._linkingLineToOriginal.setAttribute('y2', newY); 
+        } 
 
         const anchorPoint = this._updateAndGetAnchorPoint(node, newX, newY);
 
@@ -54,8 +65,9 @@ export class NodeMovementManager {
      */
     _updateIncomingLine(node, dx, dy) {
         if (node.lineElement) {
-            const oldX2 = parseFloat(node.lineElement.getAttribute('x2'));
-            const oldY2 = parseFloat(node.lineElement.getAttribute('y2'));
+            let oldX2 = parseFloat(node.lineElement.getAttribute('x2')) || 0;
+            let oldY2 = parseFloat(node.lineElement.getAttribute('y2')) || 0;
+
             node.lineElement.setAttribute('x2', oldX2 + dx);
             node.lineElement.setAttribute('y2', oldY2 + dy);
         }
@@ -114,5 +126,160 @@ export class NodeMovementManager {
                 }
             });
         }
+    }
+
+    /**
+     * Initiates a gliding animation for a node with given initial velocity.
+     * @param {HTMLElement} node - The node to glide.
+     * @param {number} initialVelocityX - The initial velocity in the X direction.
+     * @param {number} initialVelocityY - The initial velocity in the Y direction.
+     */
+    startGlide(node, initialVelocityX, initialVelocityY) {
+        let velocityX = initialVelocityX;
+        let velocityY = initialVelocityY;
+        let lastTime = performance.now();
+
+        const decelerationRate = 0.95; // A higher value (closer to 1.0) decreases friction, making the glide longer and smoother.
+        const minVelocityThreshold = 0.01; // Stop gliding when velocity is below this
+
+        const animateGlide = (currentTime) => {
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            // Calculate new position based on velocity and delta time
+            const dx = velocityX * deltaTime;
+            const dy = velocityY * deltaTime;
+
+            this.moveNodeAndChildren(node, dx, dy);
+
+            // Apply deceleration
+            velocityX *= decelerationRate;
+            velocityY *= decelerationRate;
+
+            // Stop animation if velocity is too low
+            if (Math.abs(velocityX) < minVelocityThreshold && Math.abs(velocityY) < minVelocityThreshold) {
+                return;
+            }
+
+            requestAnimationFrame(animateGlide);
+        };
+
+        requestAnimationFrame(animateGlide);
+    }
+
+    /**
+     * Starts a spring-based drag animation for a node.
+     * @param {HTMLElement} node The node to be dragged.
+     * @param {number} startX The initial X coordinate of the drag target (cursor).
+     * @param {number} startY The initial Y coordinate of the drag target (cursor).
+     */
+    startSpringDrag(node, startX, startY) {
+        if (this.springAnimationId) {
+            cancelAnimationFrame(this.springAnimationId);
+        }
+        const currentX = parseFloat(node.style.left);
+        const currentY = parseFloat(node.style.top);
+
+        // Store initial properties for all nodes in the hierarchy
+        const setupNode = (n, parent) => {
+            const nX = parseFloat(n.style.left);
+            const nY = parseFloat(n.style.top);
+            n._spring = {
+                currentX: nX,
+                currentY: nY,
+                parent: parent // The element this node should follow
+            };
+            if (parent) {
+                n._spring.initialRelativeOffsetX = nX - parseFloat(parent.style.left);
+                n._spring.initialRelativeOffsetY = nY - parseFloat(parent.style.top);
+            }
+            n._children.forEach(child => setupNode(child, n));
+        };
+        setupNode(node, null); // The root of the drag has no parent to follow initially
+
+        this.isSpringDragging = true;
+        this.springTargetNode = node;
+        this.springTargetX = startX;
+        this.springTargetY = startY;
+        this.springGrabOffsetX = startX - currentX;
+        this.springGrabOffsetY = startY - currentY;
+
+        const springFactor = 0.2; // How "stretchy" the drag is. Higher is less stretchy.
+        const childDamping = 0.1; // How much children lag behind. Lower is more lag.
+        const stopThreshold = 0.1; // How close to the target before stopping.
+
+        const animateSpring = () => {
+            if (!this.isSpringDragging || !this.springTargetNode) {
+                this.springAnimationId = null;
+                // Cleanup spring properties
+                const cleanup = (n) => {
+                    if (n) {
+                        delete n._spring;
+                        n._children.forEach(cleanup);
+                    }
+                };
+                cleanup(this.springTargetNode);
+                return;
+            }
+
+            // Animate only the root node of the drag.
+            // moveNodeAndChildren will handle propagating the movement to descendants.
+            const n = this.springTargetNode;
+
+            // The root node follows the cursor
+            const targetX = this.springTargetX - this.springGrabOffsetX;
+            const targetY = this.springTargetY - this.springGrabOffsetY;
+
+            const dx = (targetX - n._spring.currentX) * springFactor;
+            const dy = (targetY - n._spring.currentY) * springFactor;
+
+            if (Math.abs(dx) > stopThreshold || Math.abs(dy) > stopThreshold) {
+                this.moveNodeAndChildren(n, dx, dy);
+                n._spring.currentX += dx;
+                n._spring.currentY += dy;
+            }
+
+            this.springAnimationId = requestAnimationFrame(animateSpring);
+        };
+        this.springAnimationId = requestAnimationFrame(animateSpring);
+    }
+
+    /**
+     * Updates the target position for the spring-based drag.
+     * @param {number} targetX The new target X coordinate (from cursor).
+     * @param {number} targetY The new target Y coordinate (from cursor).
+     */
+    updateSpringDragTarget(targetX, targetY) {
+        if (this.isSpringDragging) {
+            this.springTargetX = targetX;
+            this.springTargetY = targetY;
+        }
+    }
+
+    /**
+     * Stops the spring-based drag animation.
+     */
+    stopSpringDrag() {
+        if (this.isSpringDragging) {
+            // Snap to final position to ensure clean integer coordinates
+            if (this.springTargetNode) {
+                const finalTargetX = this.springTargetX - this.springGrabOffsetX;
+                const finalTargetY = this.springTargetY - this.springGrabOffsetY;
+    
+                const currentX = parseFloat(this.springTargetNode.style.left);
+                const currentY = parseFloat(this.springTargetNode.style.top);
+    
+                const dx = finalTargetX - currentX;
+                const dy = finalTargetY - currentY;
+    
+                if (dx !== 0 || dy !== 0) {
+                    this.moveNodeAndChildren(this.springTargetNode, dx, dy);
+                }
+            }
+        }
+        this.isSpringDragging = false;
+        this.springGrabOffsetX = 0;
+        this.springGrabOffsetY = 0;
+        this.springTargetNode = null;
     }
 }

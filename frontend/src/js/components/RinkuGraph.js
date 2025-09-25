@@ -62,8 +62,11 @@ export class RinkuGraph extends CanvasComponent {
 
         // Initialize NodeDragHandler, passing the correct move callback.
         this.nodeDragHandler = new NodeDragHandler(
-            this._getCanvasCoordinates.bind(this),
-            this.nodeMovementManager.moveNodeAndChildren.bind(this.nodeMovementManager)
+            this._getUnscaledEventCoordinates.bind(this),
+            this.nodeMovementManager.startSpringDrag.bind(this.nodeMovementManager),
+            this.nodeMovementManager.updateSpringDragTarget.bind(this.nodeMovementManager),
+            this.nodeMovementManager.stopSpringDrag.bind(this.nodeMovementManager),
+            this.nodeMovementManager.startGlide.bind(this.nodeMovementManager) // For glide on release
         );
 
         // Initialize NodeCollapseExpandManager without the sidebar first to break the circular dependency.
@@ -227,6 +230,25 @@ export class RinkuGraph extends CanvasComponent {
             this.viewManager.focusKanji(kanjiElement);
             this.viewManager.centerViewOnElement(nodeToCenterOn);
         }
+    }
+
+    /**
+     * Converts mouse/touch event client coordinates to unscaled canvas coordinates.
+     * @param {MouseEvent|TouchEvent} event - The mouse or touch event.
+     * @returns {{ux: number, uy: number}} Unscaled canvas coordinates.
+     */
+    _getUnscaledEventCoordinates(event) {
+        const clientX = event.touches && event.touches.length > 0 ? event.touches[0].clientX : event.clientX;
+        const clientY = event.touches && event.touches.length > 0 ? event.touches[0].clientY : event.clientY;
+
+        const viewportRect = this.viewport.getBoundingClientRect();
+        const viewportX = clientX - viewportRect.left;
+        const viewportY = clientY - viewportRect.top;
+
+        const unscaledX = (viewportX - this.panZoom.getPointX()) / this.panZoom.getScale();
+        const unscaledY = (viewportY - this.panZoom.getPointY()) / this.panZoom.getScale();
+
+        return { ux: unscaledX, uy: unscaledY };
     }
 
     addEventListeners() {

@@ -80,9 +80,6 @@ describe('Integration: Node Interaction (Collapse/Expand, Movement)', () => {
             parentKanjiSidebar, parentKanjiSearchInput, parentKanjiListContainer, panZoomInstance
         );
 
-        // Mock requestAnimationFrame to execute immediately
-        jest.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => cb());
-
         // Setup initial graph state for interactions
         const initialWordData = {
             word: '日本語',
@@ -165,17 +162,27 @@ describe('Integration: Node Interaction (Collapse/Expand, Movement)', () => {
 
         // Simulate drag move
         const mouseMoveEvent = new MouseEvent('mousemove', { clientX: 150, clientY: 150, bubbles: true });
-        viewport.dispatchEvent(mouseMoveEvent);
+        document.dispatchEvent(mouseMoveEvent);
+
+        // Run the spring animation until it settles at the target.
+        // The test expects the final position, so we need to run all animation frames.
+        for (let i = 0; i < 100; i++) { // Loop a max of 100 times to prevent infinite loops
+            const oldLeft = parentNode.style.left;
+            jest.advanceTimersByTime(16); // Advance by one frame
+            if (parentNode.style.left === oldLeft) {
+                break; // Stop if the node is no longer moving
+            }
+        }
 
         // Simulate drag end
         const mouseUpEvent = new MouseEvent('mouseup', { bubbles: true });
-        viewport.dispatchEvent(mouseUpEvent);
+        document.dispatchEvent(mouseUpEvent);
 
-        // Expect parent and child to have moved by (50, 50)
-        expect(parentNode.style.left).toBe('150px');
-        expect(parentNode.style.top).toBe('150px');
-        expect(childNode.style.left).toBe('170px');
-        expect(childNode.style.top).toBe('170px');
+        // Use toBeCloseTo for floating point precision from animation
+        expect(parseFloat(parentNode.style.left)).toBeCloseTo(150, 0);
+        expect(parseFloat(parentNode.style.top)).toBeCloseTo(150, 0);
+        expect(parseFloat(childNode.style.left)).toBeCloseTo(170, 0);
+        expect(parseFloat(childNode.style.top)).toBeCloseTo(170, 0);
     });
 
     test('should hide and show a node correctly', () => {

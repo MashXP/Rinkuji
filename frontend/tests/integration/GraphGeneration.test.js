@@ -151,6 +151,61 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
 
         consoleErrorSpy.mockRestore();
     });
+        test('should use radial layout for root and pitchfork layout for children', async () => {
+        // Spy on the method we want to test coverage for
+        const drawExpansionSpy = jest.spyOn(rinkuGraph.layoutManager, 'drawExpansion');
+
+        // --- 1. Initial Radial Expansion (with 1 word to test the 'else' block) ---
+        const rootKanjiSpan = Array.from(wordContainer.querySelectorAll('.kanji-char')).find(s => s.textContent === '日');
+        const initialExpansionResponse = {
+            data: [{ slug: '休日', meaning: 'holiday' }]
+        };
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(initialExpansionResponse),
+        });
+
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: rootKanjiSpan });
+
+        // Verify the initial expansion
+        expect(drawExpansionSpy).toHaveBeenCalledTimes(1);
+        const holidayNode = nodesContainer.querySelector('[data-word-slug="休日"]');
+        expect(holidayNode).not.toBeNull();
+
+        // --- 2. Second-level "Pitchfork" Expansion (with 2 words) ---
+        const holidayKanjiSpan = holidayNode.querySelector('.kanji-char'); // Find a kanji in the new node
+        const pitchforkExpansionResponse = {
+            data: [{ slug: '祝日', meaning: 'public holiday' }]
+        };
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(pitchforkExpansionResponse),
+        });
+
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: holidayKanjiSpan });
+
+        // Verify the pitchfork expansion
+        expect(drawExpansionSpy).toHaveBeenCalledTimes(2);
+        expect(nodesContainer.querySelector('[data-word-slug="祝日"]')).not.toBeNull();
+
+        // --- 3. Third-level "Pitchfork" Expansion (with 3 words to hit the default case) ---
+        const shukujitsuNode = nodesContainer.querySelector('[data-word-slug="祝日"]');
+        const shukujitsuKanjiSpan = shukujitsuNode.querySelector('.kanji-char');
+        const defaultCaseResponse = {
+            data: [
+                { slug: 'a', meaning: 'a' },
+                { slug: 'b', meaning: 'b' },
+                { slug: 'c', meaning: 'c' }
+            ]
+        };
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve(defaultCaseResponse),
+        });
+        await rinkuGraph.expansionManager.handleKanjiClick({ currentTarget: shukujitsuKanjiSpan });
+        expect(drawExpansionSpy).toHaveBeenCalledTimes(3);
+    });
+
 
     test('should display a single node with multiple meanings for a consolidated kanji', async () => { // prettier-ignore
         const clickedKanjiSpan = Array.from(wordContainer.querySelectorAll('.kanji-char')).find(s => s.textContent === '日');
