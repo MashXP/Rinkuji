@@ -75,6 +75,10 @@ function renderChangelog(entries, container) {
 
     // Add event listener for selection change
     selectElement.addEventListener('change', (event) => {
+        // Re-fetch the content display element inside the handler to be more robust.
+        const contentDisplay = document.getElementById('changelog-content-display');
+        if (!contentDisplay) return; // Guard clause if the element is missing.
+
         const selectedIndex = parseInt(event.target.value);
         contentDisplay.innerHTML = marked.parse(entries[selectedIndex].markdown);
     });
