@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.5] - 2025-09-26
+#### Added
+- **Enhanced Node Movement & Graph Optimization**: Implemented smooth, physics-based node movement animations and a new feature to automatically optimize node arrangements for children of a selected node, accessible via right-click. This significantly improves graph readability and user interaction.
+#### Changed
+- **Logging**: Reduced console logging across the frontend.
+#### Fixed
+- **Rerandomize Logic**: Corrected an issue in the graph's rerandomize functionality where duplicate node references caused an incorrect number of new nodes to be displayed.
+
 ## [1.0.4] - 2025-09-24
 #### Added
 - **Consolidated Kanji View**: Implemented a consolidated view for kanjis with multiple entries from Jisho.

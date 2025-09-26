@@ -56,22 +56,43 @@ Rinkuji is deployed on [Render.com](https://render.com/), a cloud platform that 
 This project is licensed under the GNU AGPLv3 License - see the [LICENSE](LICENSE) file for details.
 
 ## Future Enhancements
+*   Allow users to adjust Animation parameters to their liking. 
+*   No Animation toggle (upon request)
 
-== soon ==
-*   ~~Finalize the Frontend test (urgent)~~  
-*   ~~**API Caching:** Introduce caching mechanisms in the backend for Jisho API calls to boost performance and minimize redundant requests.~~ (Implemented)
-*   ~~DEPLOYED~~
-*   ~~**Design / Add Web icon**~~
-*   ~~**Make it work on Mobile** (URGENT)~~
-*   ~~**Increase test coverage**~~
-*   ~~**Filter out Kanji-less results in NewSearch**~~
-*   **Smooth Motion Animation**: Implement smoother motion animations for ***BEEEFIER*** PCs to enhance visual experience. ✨ AESTHETICZ ✨
-*   **Node Rearrangement**: Further work on node rearrangement algorithms for better graph layouts.
 *   **First-time User Tutorial**: Implement an interactive tutorial or "how to play" guide for new users.
 *   **Advanced Search & Filtering:** Expand search capabilities with options like radical search, stroke count, and JLPT level filtering.
+*   **Save/Load Graphs:** Enable users to save their generated graphs and load them for future reference or sharing.
+
+*   **Gamification Elements**: Add different game modes to make it more competitive.
+
+    <details>
+    <summary><strong>Game Mode Ideas</strong></summary>
+    + User will be given a random starting Kanji-containing word. 
+
+    + Features:
+        + There will be 2 categories:
+            + **Imi-focus (or Yomi-focus)**: The user will be provided with auto-generated Kanji links
+            + **Kanji-focus**: The user will be able to comeup with their own Kanji as long as it's valid.
+            + **Hardcore**: Both...
+        + Lives: Each incorrect answer will deduct the user's life
+        + Timer: Timer's up and the game is over. (Or before win-con is reached)
+        + Score: Will be tallied by amount of lives left, time left, Kanji diffuculty,...
+            + Will include Highscore, Passing score, etc. -> leaderboard?
+
+    *(All parameters should be adjustable for best user experience)*.
+    + Gamemodes:
+
+        + **Kanji Blitz**: User first expands their first Kanji, user get a set amount of lives. The user has to expand until they reach and answered the pre-determined Kanji.
+
+        + **No Kanji's Left Behind**: User has to answer as much as possible until the timer stops (each answered kanji will increase time limit). The higher the N-level the more points you'd get.
+
+        + **Loop-de-loop**: User has to xpand nodes in a way that it creates a loop towards the starting Kanji, the bigger the loop the more points. No lives since it's hard. The game will auto detect if you created a loop or not.
+
+        + **Zen Mode**: Get as much point as possible. No time limit, no lives. Just enjoy. (Tho, a time counter is still needed).
+
+
+    </details>
 
 == not yet ==
 *   **Sounds**: Integrate audio cues for interactions and pronunciations. ✨ AESTHETICZ ✨
-*   **Save/Load Graphs:** Enable users to save their generated graphs and load them for future reference or sharing.
-*   **Gamification Elements**: Add different game modes to make it more competitive.
 *   ...
