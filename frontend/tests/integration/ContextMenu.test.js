@@ -1,6 +1,6 @@
 import { RinkuGraph } from '../../src/js/components/RinkuGraph.js';
 import { PanZoom } from '../../src/js/utils/PanZoom.js';
-import { GraphExpansionManager } from '../../src/js/components/GraphExpansionManager.js';
+import { GraphExpansionManager } from '../../src/js/managers/GraphExpansionManager.js';
 import { waitFor } from '@testing-library/dom';
 import * as apiService from '@services/api.js';
 
@@ -42,6 +42,7 @@ describe('Integration: Context Menu Functionality', () => {
                 <div class="context-menu-item" data-action="collapse">Collapse</div>
                 <div class="context-menu-item" data-action="expand" style="display: none;">Expand</div>
                 <div class="context-menu-item" data-action="randomize" style="display: none;">Randomize Children</div>
+                <div class="context-menu-item" data-action="optimize" style="display: none;">Optimize View</div>
                 <div class="context-menu-item" has-submenu">
                     Filter Content
                     <div class="context-menu-submenu">
@@ -318,6 +319,38 @@ describe('Integration: Context Menu Functionality', () => {
         expect(nodeContextMenu.style.display).toBe('block');
 
         targetNode.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
+        jest.useRealTimers();
+    });
+
+    test('context menu should show optimize option and trigger optimize layout', async () => {
+        jest.useFakeTimers();
+        const targetNode = nodesContainer.querySelector('[data-word-slug="休日"]');
+        const optimizeLayoutSpy = jest.spyOn(rinkuGraph.layoutManager, 'optimizeLayout');
+
+        // Simulate right-click on the node
+        const contextMenuEvent = new MouseEvent('contextmenu', {
+            clientX: 100,
+            clientY: 100,
+            bubbles: true,
+            cancelable: true,
+        });
+        targetNode.dispatchEvent(contextMenuEvent);
+
+        // Verify the optimize menu item is visible
+        const optimizeMenuItem = nodeContextMenu.querySelector('[data-action="optimize"]');
+        expect(optimizeMenuItem).not.toBeNull();
+        expect(optimizeMenuItem.style.display).toBe('block');
+
+        // Simulate clicking the optimize menu item
+        optimizeMenuItem.click();
+
+        // Fast-forward timers
+        jest.runAllTimers();
+
+        expect(optimizeLayoutSpy).toHaveBeenCalledWith(targetNode);
+        expect(nodeContextMenu.style.display).toBe('none'); // Menu should hide after action
+
+        optimizeLayoutSpy.mockRestore();
         jest.useRealTimers();
     });
 });

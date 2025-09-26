@@ -1,9 +1,9 @@
 import { RinkuGraph } from '../../src/js/components/RinkuGraph.js';
 import { CanvasComponent } from '../../src/js/components/CanvasComponent.js';
 import { LineCreator } from '../../src/js/utils/LineCreator.js';
-import { GraphExpansionManager } from '../../src/js/components/GraphExpansionManager.js';
-import { GraphLayoutManager } from '../../src/js/components/GraphLayoutManager.js';
-import { GraphViewManager } from '../../src/js/components/GraphViewManager.js';
+import { GraphExpansionManager } from '../../src/js/managers/GraphExpansionManager.js';
+import { GraphLayoutManager } from '../../src/js/managers/GraphLayoutManager.js';
+import { GraphViewManager } from '../../src/js/managers/GraphViewManager.js';
 
 jest.unmock('../../src/js/components/RinkuGraph.js');
 jest.mock('../../src/js/managers/NodeFilterManager.js');
@@ -19,9 +19,9 @@ jest.mock('../../src/js/utils/LineCreator.js');
 jest.mock('../../src/js/managers/NodeMovementManager.js');
 jest.mock('../../src/js/utils/NodeDuplicator.js');
 jest.mock('../../src/js/managers/MeaningDisplayManager.js');
-jest.mock('../../src/js/components/GraphExpansionManager.js');
-jest.mock('../../src/js/components/GraphLayoutManager.js');
-jest.mock('../../src/js/components/GraphViewManager.js', () => ({
+jest.mock('../../src/js/managers/GraphExpansionManager.js');
+jest.mock('../../src/js/managers/GraphLayoutManager.js');
+jest.mock('../../src/js/managers/GraphViewManager.js', () => ({
     GraphViewManager: jest.fn().mockImplementation(() => ({
         focusKanji: jest.fn(),
         centerViewOnElement: jest.fn(),

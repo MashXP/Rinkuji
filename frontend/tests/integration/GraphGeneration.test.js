@@ -29,7 +29,20 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
             <div id="parentKanjiSidebar"></div>
             <input id="parentKanjiSearchInput" type="text">
             <div id="parentKanjiListContainer"></div>
-            <div id="nodeContextMenu"></div>
+            <div id="nodeContextMenu" class="context-menu">
+                <div class="context-menu-item" data-action="collapse">Collapse</div>
+                <div class="context-menu-item" data-action="expand" style="display: none;">Expand</div>
+                <div class="context-menu-item" data-action="randomize" style="display: none;">Randomize Children</div>
+                <div class="context-menu-item" data-action="optimize" style="display: none;">Optimize View</div>
+                <div class="context-menu-item" has-submenu">
+                    Filter Content
+                    <div class="context-menu-submenu">
+                        <div class="context-menu-item" data-action="filter-all">Show All</div>
+                        <div class="context-menu-item" data-action="filter-kanji">Only Kanji</div>
+                        <div class="context-menu-item" data-action="filter-start-kanji">Start from Clicked Kanji</div>
+                    </div>
+                </div>
+            </div>
             <div id="meaningBar"></div>
             <button id="zoomInBtn"></button>
             <button id="zoomOutBtn"></button>
@@ -69,8 +82,9 @@ describe('Integration: Word Input and Graph Generation Flow', () => {
             parentKanjiSidebar, parentKanjiSearchInput, parentKanjiListContainer, panZoomInstance
         );
 
-        // Mock requestAnimationFrame to execute immediately
-        jest.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => cb());
+        wordContainer.style.left = '0px';
+        wordContainer.style.top = '0px';
+
     });
 
     afterEach(() => {

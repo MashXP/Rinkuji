@@ -95,14 +95,14 @@ export class ContextMenuHandler {
                 randomizeBtn.style.display = 'none';
                 delete randomizeBtn._targetKanji; // Clean up
             }
+        }
 
-            // --- Update "Optimize" option visibility ---
-            const optimizeBtn = this.nodeContextMenu.querySelector('[data-action="optimize"]');
-            if (this.activeContextMenuNode) {
-                optimizeBtn.style.display = 'block';
-            } else {
-                optimizeBtn.style.display = 'none';
-            }
+        // --- Update "Optimize" option visibility ---
+        const optimizeBtn = this.nodeContextMenu.querySelector('[data-action="optimize"]');
+        if (this.activeContextMenuNode) {
+            optimizeBtn.style.display = 'block';
+        } else {
+            optimizeBtn.style.display = 'none';
         }
     }
 

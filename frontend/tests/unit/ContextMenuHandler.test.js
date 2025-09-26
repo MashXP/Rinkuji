@@ -16,7 +16,7 @@ global.TouchEvent = class MockTouchEvent extends Event {
 describe('ContextMenuHandler', () => {
   let handler;
   let contextMenuElement;
-  let collapseCallback, expandCallback, filterCallback, rerandomizeCallback;
+  let collapseCallback, expandCallback, filterCallback, rerandomizeCallback, optimizeCallback;
   let kanjiRegex;
 
   beforeEach(() => {
@@ -28,6 +28,7 @@ describe('ContextMenuHandler', () => {
             <div data-action="filter-kanji"></div>
             <div data-action="filter-start-kanji"></div>
             <div data-action="randomize"></div>
+            <div data-action="optimize"></div>
         </div>
     `;
     contextMenuElement = document.getElementById('context-menu');
@@ -35,6 +36,7 @@ describe('ContextMenuHandler', () => {
     expandCallback = jest.fn();
     filterCallback = jest.fn();
     rerandomizeCallback = jest.fn();
+    optimizeCallback = jest.fn();
     kanjiRegex = /[\u4e00-\u9faf]/;
 
     handler = new ContextMenuHandler(
@@ -43,7 +45,8 @@ describe('ContextMenuHandler', () => {
       collapseCallback,
       expandCallback,
       filterCallback,
-      rerandomizeCallback
+      rerandomizeCallback,
+      optimizeCallback
     );
     jest.useFakeTimers();
   });
@@ -121,6 +124,29 @@ describe('ContextMenuHandler', () => {
         const randomizeBtn = contextMenuElement.querySelector('[data-action="randomize"]');
         expect(randomizeBtn.style.display).toBe('block');
         expect(randomizeBtn._targetKanji).toBe(kanjiSpan);
+    });
+
+    test('should hide optimize button if right-click is not on a node', () => {
+        // Simulate right-clicking on the document body, not on a node
+        const mockEvent = { // Use a mock event to directly control e.target
+            preventDefault: jest.fn(),
+            stopPropagation: jest.fn(),
+            target: document.body,
+            clientX: 10,
+            clientY: 20,
+        };
+
+        handler.handleContextMenu(mockEvent);
+
+        // The context menu itself should NOT be displayed
+        expect(contextMenuElement.style.display).toBe('none');
+
+        // activeContextMenuNode should be null
+        expect(handler.activeContextMenuNode).toBeNull();
+
+        // The optimize button should be hidden (this line is covered by the else branch)
+        const optimizeBtn = contextMenuElement.querySelector('[data-action="optimize"]');
+        expect(optimizeBtn.style.display).toBe('none');
     });
   });
 

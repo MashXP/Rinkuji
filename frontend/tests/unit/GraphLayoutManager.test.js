@@ -1,4 +1,4 @@
-import { GraphLayoutManager } from '@components/GraphLayoutManager.js';
+import { GraphLayoutManager } from '@managers/GraphLayoutManager.js';
 
 describe('GraphLayoutManager', () => {
     let layoutManager;
@@ -6,6 +6,7 @@ describe('GraphLayoutManager', () => {
     let mockLineCreator;
     let mockNodeFilterManager;
     let mockGetUnscaledElementCenter;
+    let mockNodeMovementManager;
 
     beforeEach(() => {
         mockNodeCreator = {
@@ -16,17 +17,23 @@ describe('GraphLayoutManager', () => {
         };
         mockLineCreator = {
             createExpansionLine: jest.fn(() => document.createElementNS('http://www.w3.org/2000/svg', 'line')),
+            updateLine: jest.fn(),
         };
         mockNodeFilterManager = {
             applyInheritedFilter: jest.fn(),
         };
         mockGetUnscaledElementCenter = jest.fn(() => ({ ux: 100, uy: 100 }));
+        mockNodeMovementManager = {
+            stopAllGlides: jest.fn(),
+            animateToPosition: jest.fn(),
+        };
 
         layoutManager = new GraphLayoutManager({
             nodeCreator: mockNodeCreator,
             lineCreator: mockLineCreator,
             nodeFilterManager: mockNodeFilterManager,
             getUnscaledElementCenter: mockGetUnscaledElementCenter,
+            nodeMovementManager: mockNodeMovementManager,
         });
     });
 
@@ -95,6 +102,70 @@ describe('GraphLayoutManager', () => {
             mockNodeCreator.createWordNode.mockClear();
             layoutManager.drawExpansion(sourceElement, sourceKanji, threeWords);
             expect(mockNodeCreator.createWordNode).toHaveBeenCalledTimes(3);
+        });
+    });
+
+    describe('optimizeLayout', () => {
+        let rootNode;
+        let child1, child2;
+        let grandchild1;
+
+        // Use fake timers to control the setTimeout in optimizeLayout
+        beforeEach(() => {
+            jest.useFakeTimers();
+            // Create a mock DOM structure
+            rootNode = document.createElement('div');
+            rootNode.style.left = '100px';
+            rootNode.style.top = '100px';
+
+            child1 = document.createElement('div');
+            child2 = document.createElement('div');
+            grandchild1 = document.createElement('div');
+
+            rootNode._children = [child1, child2];
+            child1._children = [grandchild1];
+            child2._children = [];
+            grandchild1._children = [];
+
+            child1._parent = rootNode;
+            child2._parent = rootNode;
+            grandchild1._parent = child1;
+
+            // Mock lines
+            rootNode._parentLine = null;
+            child1._parentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            child2._parentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            grandchild1._parentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        test('should arrange nodes in a hierarchical tree layout', () => {
+            layoutManager.optimizeLayout(rootNode);
+
+            // Fast-forward timers to execute the animation logic inside setTimeout
+            jest.runAllTimers();
+
+            // Check that stopAllGlides was called
+            expect(mockNodeMovementManager.stopAllGlides).toHaveBeenCalled();
+            // Check that animateToPosition was called for each descendant
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledTimes(3);
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledWith(child1, expect.any(Object));
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledWith(child2, expect.any(Object));
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledWith(grandchild1, expect.any(Object));
+        });
+
+        test('should update the lines connecting the nodes', () => {
+            layoutManager.optimizeLayout(rootNode);
+
+            // Fast-forward timers to execute the animation logic inside setTimeout
+            jest.runAllTimers();
+
+            // The test for this is now implicitly covered by checking if animateToPosition is called,
+            // as that's the method responsible for moving nodes and their lines.
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledTimes(3);
         });
     });
 });

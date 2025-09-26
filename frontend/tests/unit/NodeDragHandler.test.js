@@ -16,34 +16,53 @@ global.TouchEvent = class MockTouchEvent extends Event {
 describe('NodeDragHandler', () => {
   let handler;
   let mockNode;
+  let mockNodesContainer;
   let mockGetCanvasCoordinates;
   let mockStartSpringDragCallback;
   let mockUpdateSpringDragTargetCallback;
   let mockStopSpringDragCallback;
   let mockStartGlideCallback;
+  let mockNodeMovementManager;
 
   beforeEach(() => {
+    mockNodesContainer = document.createElement('div');
     mockNode = document.createElement('div');
     mockNode.style.left = '100px';
     mockNode.style.top = '100px';
-    document.body.appendChild(mockNode);
+    mockNodesContainer.appendChild(mockNode);
+    document.body.appendChild(mockNodesContainer);
 
     // Mock callbacks
-    mockGetCanvasCoordinates = jest.fn(e => ({ ux: e.clientX || e.touches[0].clientX, uy: e.clientY || e.touches[0].clientY }));
+    mockGetCanvasCoordinates = jest.fn(e => {
+        if (e.touches && e.touches.length > 0) {
+            return { ux: e.touches[0].clientX, uy: e.touches[0].clientY };
+        }
+        return { ux: e.clientX, uy: e.clientY };
+    });
     mockStartSpringDragCallback = jest.fn();
     mockUpdateSpringDragTargetCallback = jest.fn();
     mockStopSpringDragCallback = jest.fn();
     mockStartGlideCallback = jest.fn();
+    mockNodeMovementManager = {
+        physics: {
+            FLICK_RELEASE_TIME_THRESHOLD: 500,
+            FLICK_VELOCITY_DAMPING: 0.9,
+            MAX_GLIDE_VELOCITY: 1.2,
+            MIN_GLIDE_VELOCITY: 0.01,
+        },
+        currentVelocityX: 0,
+        currentVelocityY: 0,
+    };
 
     handler = new NodeDragHandler(
-        // The first argument, getCanvasCoordinates, is not used in the original file,
-        // but it is present in the constructor signature.
-        // Let's pass it for consistency.
+        mockNodesContainer,
         mockGetCanvasCoordinates,
+        mockNodeMovementManager,
         mockStartSpringDragCallback,
         mockUpdateSpringDragTargetCallback,
         mockStopSpringDragCallback,
-        mockStartGlideCallback);
+        mockStartGlideCallback
+    );
     handler.addDragHandlersToNode(mockNode);
   });
 
@@ -69,7 +88,7 @@ describe('NodeDragHandler', () => {
     test('should move node on mousemove when dragging', () => {
         mockNode.dispatchEvent(new MouseEvent('mousedown', { button: 0, clientX: 10, clientY: 20, bubbles: true }));
         document.dispatchEvent(new MouseEvent('mousemove', { clientX: 25, clientY: 35, bubbles: true })); // Move > threshold
-        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(mockNode, 10, 20);
+        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(mockNode, 10, 20, [mockNode]);
         expect(mockUpdateSpringDragTargetCallback).toHaveBeenCalledWith(25, 35);
     });
 
@@ -134,7 +153,7 @@ describe('NodeDragHandler', () => {
     test('should move node on touchmove', () => {
         mockNode.dispatchEvent(new TouchEvent('touchstart', { touches: [{ clientX: 10, clientY: 20 }], bubbles: true }));
         document.dispatchEvent(new TouchEvent('touchmove', { touches: [{ clientX: 25, clientY: 35 }], bubbles: true }));
-        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(mockNode, 10, 20);
+        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(mockNode, 10, 20, [mockNode]);
         expect(mockUpdateSpringDragTargetCallback).toHaveBeenCalledWith(25, 35);
     });
 
@@ -343,7 +362,9 @@ describe('NodeDragHandler', () => {
         isolatedNode.style.top = '100px';
 
         const handlerWithNoGlide = new NodeDragHandler(
+            mockNodesContainer,
             mockGetCanvasCoordinates,
+            mockNodeMovementManager,
             mockStartSpringDragCallback,
             mockUpdateSpringDragTargetCallback,
             mockStopSpringDragCallback,

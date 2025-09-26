@@ -1,4 +1,4 @@
-import { GraphExpansionManager } from '@components/GraphExpansionManager.js';
+import { GraphExpansionManager } from '@managers/GraphExpansionManager.js';
 
 // Mock dependencies
 const mockGraph = {

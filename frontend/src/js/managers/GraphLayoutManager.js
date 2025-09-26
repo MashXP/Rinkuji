@@ -141,9 +141,9 @@ export class GraphLayoutManager {
                 let baseAngle;
                 if (parent) {
                     // Calculate direction from the parent's *new* position.
-                    const grandparentPos = newPositions.get(parent) || this.getUnscaledElementCenter(parent);
-                    const dx = parentPos.ux - grandparentPos.ux;
-                    const dy = parentPos.uy - grandparentPos.uy;
+                    const parentCurrentPos = this.getUnscaledElementCenter(parent);
+                    const dx = parentPos.ux - parentCurrentPos.ux;
+                    const dy = parentPos.uy - parentCurrentPos.uy;
                     baseAngle = Math.atan2(dy, dx);
                 } else {
                     // For a non-root node that is the start of optimization, default to pointing up.

@@ -1,4 +1,4 @@
-import { GraphViewManager } from '@components/GraphViewManager.js';
+import { GraphViewManager } from '@managers/GraphViewManager.js';
 
 describe('GraphViewManager', () => {
     let viewManager;

@@ -8,6 +8,7 @@ describe('NodeDragHandler Touch Functionality', () => {
     let mockStartSpringDragCallback;
     let mockUpdateSpringDragTargetCallback;
     let mockStopSpringDragCallback;
+    let mockNodeMovementManager;
     let mockStartGlideCallback;
 
     beforeEach(() => {
@@ -24,10 +25,13 @@ describe('NodeDragHandler Touch Functionality', () => {
         mockStartSpringDragCallback = jest.fn();
         mockUpdateSpringDragTargetCallback = jest.fn();
         mockStopSpringDragCallback = jest.fn();
+        mockNodeMovementManager = { physics: { FLICK_RELEASE_TIME_THRESHOLD: 500 } };
         mockStartGlideCallback = jest.fn();
 
         nodeDragHandler = new NodeDragHandler(
+            document.createElement('div'), // nodesContainer
             mockGetCanvasCoordinates,
+            mockNodeMovementManager,
             mockStartSpringDragCallback,
             mockUpdateSpringDragTargetCallback,
             mockStopSpringDragCallback,
@@ -67,7 +71,7 @@ describe('NodeDragHandler Touch Functionality', () => {
         });
         document.dispatchEvent(mouseupEvent);
 
-        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(testNode, 100, 100);
+        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(testNode, 100, 100, expect.any(Array));
         expect(mockUpdateSpringDragTargetCallback).toHaveBeenCalledWith(150, 120);
         expect(nodeDragHandler.hasDragOccurred()).toBe(true);
     });
@@ -98,7 +102,7 @@ describe('NodeDragHandler Touch Functionality', () => {
         });
         document.dispatchEvent(touchendEvent);
 
-        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(testNode, 100, 100);
+        expect(mockStartSpringDragCallback).toHaveBeenCalledWith(testNode, 100, 100, expect.any(Array));
         expect(mockUpdateSpringDragTargetCallback).toHaveBeenCalledWith(150, 120);
         expect(nodeDragHandler.hasDragOccurred()).toBe(true);
     });

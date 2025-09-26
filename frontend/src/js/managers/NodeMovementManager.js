@@ -370,14 +370,6 @@ export class NodeMovementManager {
         const animateSpring = () => {
             if (!this.isSpringDragging || !this.springTargetNode) {
                 this.springAnimationId = null;
-                // Cleanup spring properties
-                const cleanup = (n) => {
-                    if (n) {
-                        delete n._spring;
-                        n._children.forEach(cleanup);
-                    }
-                };
-                cleanup(this.springTargetNode);
                 this.collidableNodes = [];
                 return;
             }
@@ -427,6 +419,9 @@ export class NodeMovementManager {
      */
     stopSpringDrag() {
         this.isSpringDragging = false;
+        if (this.springTargetNode) {
+            this._cleanupSpringProperties(this.springTargetNode);
+        }
         this.springGrabOffsetX = 0;
         this.springGrabOffsetY = 0;
         this.springTargetNode = null;
@@ -469,7 +464,7 @@ export class NodeMovementManager {
                         // Otherwise, push both nodes away from each other.
                         if (nodeA === draggedNode) {
                             // If the collided node is not a child of the dragged node, push it and give it a slight nudge.
-                            if (!this._isAncestor(draggedNode, nodeB)) {
+                            if (!this._isAncestor(draggedNode, nodeB) && !this._isAncestor(nodeB, draggedNode)) {
                                 this.moveNodeAndChildren(nodeB, pushX, pushY); // Resolve the overlap immediately.
                                 // Start a small glide on the collided node based on the push force.
                                 this.startGlide(nodeB, pushX * this.physics.DRAG_VELOCITY_TRANSFER, pushY * this.physics.DRAG_VELOCITY_TRANSFER);
@@ -496,5 +491,12 @@ export class NodeMovementManager {
             currentNode = currentNode._parent;
         }
         return false;
+    }
+
+    _cleanupSpringProperties(node) {
+        if (node) {
+            delete node._spring;
+            node._children.forEach(child => this._cleanupSpringProperties(child));
+        }
     }
 }
