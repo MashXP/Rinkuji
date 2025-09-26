@@ -242,6 +242,7 @@ describe('GraphExpansionManager', () => {
         test('should preserve expanded children and fill remaining slots', async () => {
             const expandedChild = document.createElement('div');
             expandedChild.dataset.sourceKanji = '日';
+            expandedChild.dataset.wordSlug = 'slugEx'; // Make test more robust
             expandedChild._children = [document.createElement('div')];
 
             const unexpandedChild = document.createElement('div');
@@ -270,13 +271,19 @@ describe('GraphExpansionManager', () => {
             expect(sourceKanjiElement.dataset.hasMoreWords).toBeUndefined();
         });
 
-        test('should prioritize non-expanded kanji-as-word when selecting new words', async () => {
+        test('should select random words from the available pool', async () => {
             const allWords = [{ slug: '日' }, { slug: '日本' }, { slug: '本日' }, { slug: '休日' }];
             mockGraph.fetchRelatedWords.mockResolvedValueOnce(allWords);
+            // Mock shuffle to be predictable
+            const shuffleSpy = jest.spyOn(expansionManager, '_shuffleArray').mockImplementation(arr => arr.reverse());
+
             await expansionManager.rerandomizeNode(sourceKanjiElement);
+
             expect(mockLayoutManager.drawExpansion).toHaveBeenCalled();
             const wordsToDisplay = mockLayoutManager.drawExpansion.mock.calls[0][2];
-            expect(wordsToDisplay.some(w => w.slug === '日')).toBe(true);
+            // With 3 slots to fill and a reversed array, we expect the last 3 words.
+            expect(wordsToDisplay.map(w => w.slug)).toEqual(['休日', '本日', '日本']);
+            shuffleSpy.mockRestore();
         });
     });
 });

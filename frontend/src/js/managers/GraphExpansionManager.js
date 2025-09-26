@@ -168,10 +168,13 @@ export class GraphExpansionManager {
         const parentNode = sourceKanjiElement.parentElement;
         const sourceKanji = sourceKanjiElement.textContent;
 
-        const allSourceChildren = Array.from(parentNode._children || []).filter(child => child.dataset.sourceKanji === sourceKanji);
-        const expandedChildren = allSourceChildren.filter(child => child._children && child._children.length > 0);
-        const unexpandedChildren = allSourceChildren.filter(child => !child._children || child._children.length === 0);
+        const allSourceChildrenWithDupes = Array.from(parentNode._children || []).filter(child => child.dataset.sourceKanji === sourceKanji);
+        const allSourceChildren = [...new Set(allSourceChildrenWithDupes)]; // Deduplicate
 
+        const expandedChildren = allSourceChildren.filter(child => child._children && child._children.length > 0);
+        const unexpandedChildren = allSourceChildren.filter(child => !expandedChildren.includes(child));
+
+        // Remove unexpanded children
         unexpandedChildren.forEach(child => {
             if (child.lineElement && child.lineElement.parentNode) {
                 child.lineElement.parentNode.removeChild(child.lineElement);
@@ -182,43 +185,32 @@ export class GraphExpansionManager {
         });
         parentNode._children = (parentNode._children || []).filter(child => !unexpandedChildren.includes(child));
 
-        // 3. Fetch all possible related words (excluding what's currently on the graph, including the preserved expanded children)
-        const allRelatedWords = await this.graph.fetchRelatedWords(sourceKanji);
-
-        // 4. Determine how many new words we need and select them
         const slotsToFill = this.MAX_WORDS_TO_DISPLAY - expandedChildren.length;
-        let newWordsToDisplay = [];
 
-        if (slotsToFill > 0 && allRelatedWords.length > 0) {
-            // Check if the single-kanji word should be prioritized
-            const isKanjiAsWordAlreadyExpanded = expandedChildren.some(child => child.dataset.wordSlug === sourceKanji);
-            const kanjiAsWordCandidate = allRelatedWords.find(word => word.slug === sourceKanji);
-
-            let candidates = [...allRelatedWords];
-            this._shuffleArray(candidates); // Shuffle all candidates first
-
-            if (kanjiAsWordCandidate && !isKanjiAsWordAlreadyExpanded) {
-                // If the prioritized word is available and not already shown, ensure it's included.
-                // Remove it from its random position and put it at the front.
-                candidates = candidates.filter(word => word.slug !== sourceKanji);
-                candidates.unshift(kanjiAsWordCandidate);
-            }
-            
-            newWordsToDisplay = candidates.slice(0, slotsToFill);
+        if (slotsToFill <= 0) {
+            return;
         }
 
-        // 5. Update the 'hasMoreWords' flag for the context menu
-        const hasMore = allRelatedWords.length > newWordsToDisplay.length;
+        const allRelatedWords = await this.graph.fetchRelatedWords(sourceKanji);
+
+        const expandedWordSlugs = expandedChildren.map(child => child.dataset.wordSlug).filter(slug => slug);
+        const availableWords = allRelatedWords.filter(word => !expandedWordSlugs.includes(word.slug));
+
+        let newWordsToDisplay = [];
+        if (availableWords.length > 0) {
+            this._shuffleArray(availableWords);
+            newWordsToDisplay = availableWords.slice(0, slotsToFill);
+        }
+
+        const hasMore = availableWords.length > newWordsToDisplay.length;
         if (hasMore) {
             sourceKanjiElement.dataset.hasMoreWords = 'true';
         } else {
             delete sourceKanjiElement.dataset.hasMoreWords;
         }
 
-        // 6. Draw the new expansion for the newly selected words
         if (newWordsToDisplay.length > 0) {
             this.layoutManager.drawExpansion(sourceKanjiElement, sourceKanji, newWordsToDisplay);
-        } else {
         }
     }
 }
