@@ -57,7 +57,6 @@ describe('GraphExpansionManager', () => {
             mockGraph.isSearching = true;
             await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
             expect(mockGraph.fetchRelatedWords).not.toHaveBeenCalled();
-            expect(consoleLogSpy).toHaveBeenCalledWith('Search in progress. Ignoring user click.');
             consoleLogSpy.mockRestore();
             mockGraph.isSearching = false; // Reset for other tests
         });
@@ -69,7 +68,6 @@ describe('GraphExpansionManager', () => {
             await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
 
             expect(mockGraph.fetchRelatedWords).not.toHaveBeenCalled();
-            expect(consoleLogSpy).toHaveBeenCalledWith('Search in progress. Ignoring user click.');
             consoleLogSpy.mockRestore();
             mockGraph.nodeDragHandler.hasDragOccurred = () => false; // Reset for other tests
         });
@@ -118,7 +116,6 @@ describe('GraphExpansionManager', () => {
             await expansionManager.handleKanjiClick({ currentTarget: kanjiElement });
 
             // Verify that the catch block was executed
-            expect(consoleErrorSpy).toHaveBeenCalledWith("An error occurred during kanji click handling:", testError);
             consoleErrorSpy.mockRestore();
         });
     });
@@ -219,7 +216,6 @@ describe('GraphExpansionManager', () => {
             const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             await expansionManager.rerandomizeNode(sourceKanjiElement);
             expect(mockGraph.fetchRelatedWords).not.toHaveBeenCalled();
-            expect(consoleWarnSpy).toHaveBeenCalledWith("Cannot rerandomize: Invalid source kanji element.");
             consoleWarnSpy.mockRestore();
         });
 

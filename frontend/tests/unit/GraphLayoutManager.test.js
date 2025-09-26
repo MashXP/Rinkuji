@@ -157,6 +157,67 @@ describe('GraphLayoutManager', () => {
             expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledWith(grandchild1, expect.any(Object));
         });
 
+        test('should use radial layout for root node children during optimization', () => {
+            rootNode.dataset.isRootNode = 'true'; // Ensure this condition is met
+            layoutManager.optimizeLayout(rootNode);
+            jest.runAllTimers();
+
+            // Expect animateToPosition to be called for children
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledWith(child1, expect.any(Object));
+            expect(mockNodeMovementManager.animateToPosition).toHaveBeenCalledWith(child2, expect.any(Object));
+
+            // Verify the positions are distinct and reflect a radial pattern.
+            const child1NewPos = mockNodeMovementManager.animateToPosition.mock.calls.find(call => call[0] === child1)[1];
+            const child2NewPos = mockNodeMovementManager.animateToPosition.mock.calls.find(call => call[0] === child2)[1];
+
+            // Expect children to be at different positions
+            expect(child1NewPos.ux).toBeCloseTo(child2NewPos.ux); // X coordinates should be the same as parent for 2 children
+            expect(child1NewPos.uy).not.toBe(child2NewPos.uy);
+        });
+
+        test('should resolve collisions between overlapping nodes during optimization', () => {
+            // Setup: Create two children that will initially overlap
+            rootNode.dataset.isRootNode = 'true';
+            const collidingChild1 = document.createElement('div');
+            const collidingChild2 = document.createElement('div');
+            collidingChild1.style.left = '100px'; // Initial position
+            collidingChild1.style.top = '100px';
+            collidingChild2.style.left = '105px'; // Slightly overlapping
+            collidingChild2.style.top = '100px';
+
+            // Mock offsetWidth to ensure collision
+            Object.defineProperty(collidingChild1, 'offsetWidth', { value: 400 });
+            Object.defineProperty(collidingChild2, 'offsetWidth', { value: 400 });
+
+            rootNode._children = [collidingChild1, collidingChild2];
+            collidingChild1._parent = rootNode;
+            collidingChild2._parent = rootNode;
+
+            // Mock getUnscaledElementCenter to return fixed positions for these children
+            // This will ensure they are placed in a way that causes collision
+            mockGetUnscaledElementCenter
+                .mockReturnValueOnce({ ux: 100, uy: 100 }) // for rootNode
+                .mockReturnValueOnce({ ux: 100, uy: 100 }) // for collidingChild1 (initial)
+                .mockReturnValueOnce({ ux: 105, uy: 100 }); // for collidingChild2 (initial)
+
+            layoutManager.optimizeLayout(rootNode);
+            jest.runAllTimers();
+
+            // Get the final positions after collision resolution
+            const finalPos1 = mockNodeMovementManager.animateToPosition.mock.calls.find(call => call[0] === collidingChild1)[1];
+            const finalPos2 = mockNodeMovementManager.animateToPosition.mock.calls.find(call => call[0] === collidingChild2)[1];
+
+            // Expect positions to have changed due to collision resolution
+            expect(finalPos1.uy).not.toBe(-100); // Initial uy for collidingChild1 was -100
+            expect(finalPos2.uy).not.toBe(300); // Initial uy for collidingChild2 was 300
+
+            // Expect them to no longer be overlapping (distance > requiredDistance)
+            const distance = Math.sqrt(Math.pow(finalPos2.ux - finalPos1.ux, 2) + Math.pow(finalPos2.uy - finalPos1.uy, 2));
+            const expectedRequiredDistance = (collidingChild1.offsetWidth / 2) + (collidingChild2.offsetWidth / 2) + 30; // PADDING is 30
+
+            expect(distance).toBeGreaterThanOrEqual(expectedRequiredDistance - 0.01); // Allow for floating point inaccuracies
+        });
+
         test('should update the lines connecting the nodes', () => {
             layoutManager.optimizeLayout(rootNode);
 

@@ -90,7 +90,7 @@ export class OptionsMenu {
     _clearCache() {
         localStorageCacheService.clear();
         alert('Cache cleared successfully!'); // Simple feedback
-        console.log('Application cache cleared.');
+        //console.log('Application cache cleared.');
     }
 
     /**

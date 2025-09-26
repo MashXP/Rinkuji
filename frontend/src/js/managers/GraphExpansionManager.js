@@ -52,7 +52,6 @@ export class GraphExpansionManager {
         const kanjiElement = e.currentTarget;
 
         if (!isProgrammatic && (this.graph.isSearching || this.graph.nodeDragHandler.hasDragOccurred())) {
-            console.log('Search in progress. Ignoring user click.');
             return;
         }
 
@@ -75,7 +74,6 @@ export class GraphExpansionManager {
         try {
             await this._performExpansion(kanjiElement);
         } catch (error) {
-            console.error("An error occurred during kanji click handling:", error);
         } finally {
             if (!isProgrammatic) {
                 this.graph.isSearching = false;
@@ -103,7 +101,6 @@ export class GraphExpansionManager {
         const kanjiChar = kanjiElement.textContent;
         const parentNode = kanjiElement.parentElement;
 
-        console.log(`Clicked kanji: ${kanjiChar}`);
         const relatedWords = await this.graph.fetchRelatedWords(kanjiChar);
 
         if (relatedWords.length > 0) {
@@ -165,7 +162,6 @@ export class GraphExpansionManager {
      */
     async rerandomizeNode(sourceKanjiElement) {
         if (!sourceKanjiElement || !sourceKanjiElement.classList.contains('active-source-kanji')) {
-            console.warn("Cannot rerandomize: Invalid source kanji element.");
             return;
         }
 
@@ -222,9 +218,7 @@ export class GraphExpansionManager {
         // 6. Draw the new expansion for the newly selected words
         if (newWordsToDisplay.length > 0) {
             this.layoutManager.drawExpansion(sourceKanjiElement, sourceKanji, newWordsToDisplay);
-            console.log(`Rerandomized ${sourceKanji} with ${newWordsToDisplay.length} new words, keeping ${expandedChildren.length} expanded nodes.`);
         } else {
-             console.log(`Rerandomized ${sourceKanji}: No new words to add, kept ${expandedChildren.length} expanded nodes.`);
         }
     }
 }

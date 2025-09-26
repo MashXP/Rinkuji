@@ -73,8 +73,8 @@ export class NodeMovementManager {
      * @param {number} dy - Change in Y coordinate.
      */
     moveNodeAndChildren(node, dx, dy) {
-        const currentX = parseFloat(node.style.left);
-        const currentY = parseFloat(node.style.top);
+        const currentX = parseFloat(node.style.left || 0);
+        const currentY = parseFloat(node.style.top || 0);
         const newX = currentX + dx;
         const newY = currentY + dy;
 
@@ -186,6 +186,12 @@ export class NodeMovementManager {
         let lastTime = performance.now();
 
         const currentVelocity = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+
+        // If initial velocity is too low, do not start glide
+        if (currentVelocity < this.physics.MIN_GLIDE_VELOCITY) {
+            return;
+        }
+
         if (currentVelocity > this.physics.MAX_GLIDE_VELOCITY) {
             const scale = this.physics.MAX_GLIDE_VELOCITY / currentVelocity;
             velocityX *= scale;
@@ -289,6 +295,14 @@ export class NodeMovementManager {
      * @param {number} [duration=500] - The duration of the animation in milliseconds.
      */
     animateToPosition(node, targetPos, duration = 500) {
+        if (duration === 0) {
+            const currentX = parseFloat(node.style.left || 0);
+            const currentY = parseFloat(node.style.top || 0);
+            const dx = targetPos.ux - currentX;
+            const dy = targetPos.uy - currentY;
+            this.moveNodeAndChildren(node, dx, dy);
+            return;
+        }
         const startX = parseFloat(node.style.left || 0);
         const startY = parseFloat(node.style.top || 0);
         const totalDx = targetPos.ux - startX;

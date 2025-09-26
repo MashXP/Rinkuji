@@ -34,7 +34,7 @@ export class NodeCollapseExpandManager {
 
         // Notify the sidebar to update the dimming state of its items
         if (this.kanjiSidebar) this.kanjiSidebar.recalculateDimmingState();
-        console.log(`Node collapsed: ${node.dataset.wordSlug}`);
+        //console.log(`Node collapsed: ${node.dataset.wordSlug}`);
     }
 
     /**
@@ -51,7 +51,7 @@ export class NodeCollapseExpandManager {
         if (this.kanjiSidebar) this.kanjiSidebar.recalculateDimmingState();
 
         this.nodeFilterManager.applyChildFilterRecursively(node);
-        console.log(`Node expanded: ${node.dataset.wordSlug}`);
+        //console.log(`Node expanded: ${node.dataset.wordSlug}`);
     }
 
     /**
@@ -75,7 +75,7 @@ export class NodeCollapseExpandManager {
         }
 
         this.kanjiSidebar.recalculateDimmingState();
-        console.log(`Node hidden: ${node.dataset.wordSlug}`);
+        //console.log(`Node hidden: ${node.dataset.wordSlug}`);
     }
 
     /**
@@ -107,6 +107,6 @@ export class NodeCollapseExpandManager {
         }
         
         this.kanjiSidebar.recalculateDimmingState();
-        console.log(`Node shown: ${node.dataset.wordSlug}`);
+        //console.log(`Node shown: ${node.dataset.wordSlug}`);
     }
 }

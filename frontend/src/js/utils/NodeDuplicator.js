@@ -31,7 +31,7 @@ export class NodeDuplicator {
         const originalWordString = originalNode.dataset.wordSlug || this.wordContainer.dataset.word;
         const clickedKanjiChar = clickedKanjiElement.textContent;
 
-        console.log(`Duplicating node for word "${originalWordString}" to expand kanji "${clickedKanjiChar}"`);
+        //console.log(`Duplicating node for word "${originalWordString}" to expand kanji "${clickedKanjiChar}"`);
 
         const originalNodeCenter = this._getUnscaledElementCenter(originalNode);
         const originalLineStartX = originalNodeCenter.ux;

@@ -196,7 +196,7 @@ export class RinkuGraph extends CanvasComponent {
                 throw new Error(`API error for ${kanjiChar}: ${response.status}`);
             }
             const results = await response.json();
-            console.log(`API response for ${kanjiChar}:`, results);
+            //console.log(`API response for ${kanjiChar}:`, results);
             const existingSlugs = new Set(Array.from(this.nodesContainer.querySelectorAll('[data-word-slug]')).map(n => n.dataset.wordSlug));
             existingSlugs.add(this.word);
 

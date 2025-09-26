@@ -55,7 +55,7 @@ export class NodeFilterManager {
             });
         }
 
-        // console.log(`Node ${node.dataset.wordSlug} filtered by: ${filterType}`);
+        // //console.log(`Node ${node.dataset.wordSlug} filtered by: ${filterType}`);
     }
 
     /**
