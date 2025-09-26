@@ -10,9 +10,9 @@ import { NodeMovementManager } from '../managers/NodeMovementManager.js';
 import { NodeDuplicator } from '../utils/NodeDuplicator.js';
 import { NodeCollapseExpandManager } from '../managers/NodeCollapseExpandManager.js';
 import { MeaningDisplayManager } from '../managers/MeaningDisplayManager.js';
-import { GraphExpansionManager } from './GraphExpansionManager.js';
-import { GraphLayoutManager } from './GraphLayoutManager.js';
-import { GraphViewManager } from './GraphViewManager.js';
+import { GraphExpansionManager } from '../managers/GraphExpansionManager.js';
+import { GraphLayoutManager } from '../managers/GraphLayoutManager.js';
+import { GraphViewManager } from '../managers/GraphViewManager.js';
 
 // Class to manage the Rinku Graph functionality (expansion, nodes, sidebar)
 export class RinkuGraph extends CanvasComponent {
@@ -54,15 +54,18 @@ export class RinkuGraph extends CanvasComponent {
             nodeCreator: null, // Will be set below
             lineCreator: new LineCreator(this.svgLayer, this.panZoom),
             nodeFilterManager: this.nodeFilterManager,
-            getUnscaledElementCenter: this._getUnscaledElementCenter.bind(this)
+            getUnscaledElementCenter: this._getUnscaledElementCenter.bind(this),
+            nodeMovementManager: null // Will be set in the constructor
         });
 
         // Initialize NodeMovementManager first, as NodeDragHandler depends on it.
-        this.nodeMovementManager = new NodeMovementManager(this.panZoom, this.graphState);
+        this.nodeMovementManager = new NodeMovementManager(this.nodesContainer, this.panZoom, this.graphState);
 
         // Initialize NodeDragHandler, passing the correct move callback.
         this.nodeDragHandler = new NodeDragHandler(
+            this.nodesContainer,
             this._getUnscaledEventCoordinates.bind(this),
+            this.nodeMovementManager,
             this.nodeMovementManager.startSpringDrag.bind(this.nodeMovementManager),
             this.nodeMovementManager.updateSpringDragTarget.bind(this.nodeMovementManager),
             this.nodeMovementManager.stopSpringDrag.bind(this.nodeMovementManager),
@@ -92,7 +95,8 @@ export class RinkuGraph extends CanvasComponent {
             (node) => this.nodeCollapseExpandManager.collapseNode(node),
             (node) => this.nodeCollapseExpandManager.expandNode(node),
             (node, filterType, clickedKanji) => this.nodeFilterManager.filterNodeContent(node, filterType, clickedKanji),
-            (sourceKanjiElement) => this.expansionManager.rerandomizeNode(sourceKanjiElement) // This ensures the latest method is called
+            (sourceKanjiElement) => this.expansionManager.rerandomizeNode(sourceKanjiElement), // This ensures the latest method is called
+            (node) => this.optimizeNodeLayout(node) // Add this line
         );
 
         // Initialize Meaning Display Manager
@@ -139,10 +143,15 @@ export class RinkuGraph extends CanvasComponent {
             MAX_WORDS_TO_DISPLAY: this.MAX_WORDS_TO_DISPLAY
         });
         this.layoutManager.nodeCreator = this.nodeCreator;
+        this.layoutManager.nodeMovementManager = this.nodeMovementManager;
 
         this.graphInitializer = new GraphInitializer(this.wordContainer, this.kanjiRegex, this._addKanjiEventListeners.bind(this));
         this.graphInitializer.initialize();
         this.addEventListeners();
+    }
+
+    optimizeNodeLayout(node) {
+        this.layoutManager.optimizeLayout(node);
     }
 
     _addKanjiEventListeners(kanjiSpan) {

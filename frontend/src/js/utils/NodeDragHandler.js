@@ -4,15 +4,19 @@
  */
 export class NodeDragHandler {
     /**
+     * @param {HTMLElement} nodesContainer - The container for all graph nodes.
      * @param {function(MouseEvent): {ux: number, uy: number}} getCanvasCoordinates - Callback to get unscaled canvas coordinates.
+     * @param {NodeMovementManager} nodeMovementManager - The manager for node physics.
      * @param {function(HTMLElement, number, number): void} startSpringDragCallback - Callback to initiate spring drag.
      * @param {function(number, number): void} updateSpringDragTargetCallback - Callback to update spring drag target.
      * @param {function(): void} stopSpringDragCallback - Callback to stop spring drag.
      * @param {function(HTMLElement, number, number): void} startGlideCallback - Callback to initiate a glide animation.
      */
-    constructor(getCanvasCoordinates, startSpringDragCallback, updateSpringDragTargetCallback, stopSpringDragCallback, startGlideCallback) {
+    constructor(nodesContainer, getCanvasCoordinates, nodeMovementManager, startSpringDragCallback, updateSpringDragTargetCallback, stopSpringDragCallback, startGlideCallback) {
+        this.nodesContainer = nodesContainer;
         this.getCanvasCoordinates = getCanvasCoordinates;
         this.startSpringDragCallback = startSpringDragCallback;
+        this.nodeMovementManager = nodeMovementManager;
         this.updateSpringDragTargetCallback = updateSpringDragTargetCallback;
         this.stopSpringDragCallback = stopSpringDragCallback;
         this.startGlideCallback = startGlideCallback;
@@ -88,7 +92,8 @@ export class NodeDragHandler {
             const totalDeltaY = Math.abs(canvasCoords.uy - this.initialY);
             if (totalDeltaX > this.dragThreshold || totalDeltaY > this.dragThreshold) {
                 this._dragOccurred = true;
-                this.startSpringDragCallback(this.activeNode, this.initialX, this.initialY);
+                const collidableNodes = Array.from(this.nodesContainer.children);
+                this.startSpringDragCallback(this.activeNode, this.initialX, this.initialY, collidableNodes);
                 this.activeNode.style.cursor = 'grabbing';
                 e.preventDefault(); // Prevent scrolling only when drag starts
             }
@@ -133,27 +138,40 @@ export class NodeDragHandler {
         // Calculate velocity at the moment of release
         if (this._dragOccurred) {
             this.stopSpringDragCallback();
-            if (nodeToGlide && this.startGlideCallback) {
-            const currentTime = performance.now();
-            const deltaTime = currentTime - this.lastMoveTime;
-            // Only glide if release is quick after last move
-            if (deltaTime < 500) { // Increased time window to make glide easier to trigger
-                    const velocityDamping = 0.1; // Further reduce initial velocity for a gentler start.
-                    let velocityX = (this.lastDx / (deltaTime || 1)) * velocityDamping;
-                    let velocityY = (this.lastDy / (deltaTime || 1)) * velocityDamping;
+            if (nodeToGlide && this.startGlideCallback) { // prettier-ignore
+                const currentTime = performance.now();
+                const deltaTime = currentTime - this.lastMoveTime;
+                let velocityX = 0;
+                let velocityY = 0;
 
-                // Cap the maximum velocity to prevent extreme flings
-                    const maxVelocity = 1.2; // pixels per millisecond. Lowered for more control.
+                // Determine the source of the velocity
+                if (this.nodeMovementManager.currentVelocityX !== 0 || this.nodeMovementManager.currentVelocityY !== 0) {
+                    // A collision occurred, use the resulting velocity from the physics manager
+                    velocityX = this.nodeMovementManager.currentVelocityX;
+                    velocityY = this.nodeMovementManager.currentVelocityY;
+                } else if (deltaTime < this.nodeMovementManager.physics.FLICK_RELEASE_TIME_THRESHOLD) {
+                    // A standard "flick" occurred, calculate velocity from cursor movement
+                    velocityX = this.lastDx / (deltaTime || 1);
+                    velocityY = this.lastDy / (deltaTime || 1);
+                }
+
+                // Apply consistent damping and capping to the determined velocity
+                velocityX *= this.nodeMovementManager.physics.FLICK_VELOCITY_DAMPING;
+                velocityY *= this.nodeMovementManager.physics.FLICK_VELOCITY_DAMPING;
+
+                // The cap is now handled inside startGlide, but we can still check here if needed.
+                // For now, we'll let startGlide manage the absolute max speed.
+                const maxVelocity = this.nodeMovementManager.physics.MAX_GLIDE_VELOCITY;
                 const currentVelocity = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-
                 if (currentVelocity > maxVelocity) {
                     const scale = maxVelocity / currentVelocity;
                     velocityX *= scale;
                     velocityY *= scale;
                 }
-                // Velocity = last change in position / time since last change
-                this.startGlideCallback(nodeToGlide, velocityX, velocityY);
-            }
+
+                if (Math.abs(velocityX) > this.nodeMovementManager.physics.MIN_GLIDE_VELOCITY || Math.abs(velocityY) > this.nodeMovementManager.physics.MIN_GLIDE_VELOCITY) {
+                    this.startGlideCallback(nodeToGlide, velocityX, velocityY);
+                }
             }
         }
 
@@ -203,7 +221,8 @@ export class NodeDragHandler {
             const totalDeltaY = Math.abs(canvasCoords.uy - this.initialY);
             if (totalDeltaX > this.dragThreshold || totalDeltaY > this.dragThreshold) {
                 this._dragOccurred = true;
-                this.startSpringDragCallback(this.activeNode, this.initialX, this.initialY);
+                const collidableNodes = Array.from(this.nodesContainer.children);
+                this.startSpringDragCallback(this.activeNode, this.initialX, this.initialY, collidableNodes);
                 this.activeNode.style.cursor = 'grabbing';
             }
         }
@@ -249,27 +268,39 @@ export class NodeDragHandler {
             // Calculate velocity at the moment of release
             if (this._dragOccurred) {
                 this.stopSpringDragCallback();
-                if (nodeToGlide && this.startGlideCallback) {
-                const currentTime = performance.now();
-                const deltaTime = currentTime - this.lastMoveTime;
-                // Only glide if release is quick after last move
-                if (deltaTime < 500) { // Increased time window to make glide easier to trigger
-                    const velocityDamping = 0.1; // Further reduce initial velocity for a gentler start.
-                    let velocityX = (this.lastDx / (deltaTime || 1)) * velocityDamping;
-                    let velocityY = (this.lastDy / (deltaTime || 1)) * velocityDamping;
+                if (nodeToGlide && this.startGlideCallback) { // prettier-ignore
+                    const currentTime = performance.now();
+                    const deltaTime = currentTime - this.lastMoveTime;
+                    let velocityX = 0;
+                    let velocityY = 0;
 
-                    // Cap the maximum velocity to prevent extreme flings
-                    const maxVelocity = 1.2; // pixels per millisecond. Lowered for more control.
+                    // Determine the source of the velocity
+                    if (this.nodeMovementManager.currentVelocityX !== 0 || this.nodeMovementManager.currentVelocityY !== 0) {
+                        // A collision occurred, use the resulting velocity from the physics manager
+                        velocityX = this.nodeMovementManager.currentVelocityX;
+                        velocityY = this.nodeMovementManager.currentVelocityY;
+                } else if (deltaTime < this.nodeMovementManager.physics.FLICK_RELEASE_TIME_THRESHOLD) {
+                        // A standard "flick" occurred, calculate velocity from cursor movement
+                        velocityX = this.lastDx / (deltaTime || 1);
+                        velocityY = this.lastDy / (deltaTime || 1);
+                    }
+
+                    // Apply consistent damping and capping to the determined velocity
+                velocityX *= this.nodeMovementManager.physics.FLICK_VELOCITY_DAMPING;
+                velocityY *= this.nodeMovementManager.physics.FLICK_VELOCITY_DAMPING;
+
+                // The cap is now handled inside startGlide, but we can still check here if needed.
+                const maxVelocity = this.nodeMovementManager.physics.MAX_GLIDE_VELOCITY;
                     const currentVelocity = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-
                     if (currentVelocity > maxVelocity) {
                         const scale = maxVelocity / currentVelocity;
                         velocityX *= scale;
                         velocityY *= scale;
                     }
-                    // Velocity = last change in position / time since last change
-                    this.startGlideCallback(nodeToGlide, velocityX, velocityY);
-                }
+
+                if (Math.abs(velocityX) > this.nodeMovementManager.physics.MIN_GLIDE_VELOCITY || Math.abs(velocityY) > this.nodeMovementManager.physics.MIN_GLIDE_VELOCITY) {
+                        this.startGlideCallback(nodeToGlide, velocityX, velocityY);
+                    }
                 }
             }
 

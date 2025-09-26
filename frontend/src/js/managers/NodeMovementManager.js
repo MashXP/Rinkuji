@@ -1,10 +1,12 @@
 export class NodeMovementManager {
     /**
+     * @param {HTMLElement} nodesContainer - The container for all graph nodes.
      * @param {PanZoom} panZoom - Instance of PanZoom for coordinate calculations.
      * @param {object} graphState - Object holding current selection circle state (currentSelectionCircle, currentSelectionCircleParentNode, currentSelectionCircleOffsetX, currentSelectionCircleOffsetY).
      */
-    constructor(panZoom, graphState) {
+    constructor(nodesContainer, panZoom, graphState) {
         this.panZoom = panZoom;
+        this.nodesContainer = nodesContainer;
         this.graphState = graphState; // Reference to RinkuGraph's state for selection circle
 
         // Properties for the new spring-based interactive drag
@@ -15,6 +17,51 @@ export class NodeMovementManager {
         this.springAnimationId = null;
         this.springGrabOffsetX = 0; // Offset from node center to cursor
         this.springGrabOffsetY = 0;
+        this.collidableNodes = []; // Nodes to check for collision against
+        this.currentVelocityX = 0; // Velocity of the dragged node
+        this.currentVelocityY = 0;
+
+        // Centralized physics parameters
+        this.physics = {
+            // User Input (Flick gesture)
+            FLICK_RELEASE_TIME_THRESHOLD: 500, // Max time (ms) after last move to trigger a glide.
+            FLICK_VELOCITY_DAMPING: 0.1, // Multiplier to reduce initial "flick" velocity.
+
+            // Glide animation
+            MAX_GLIDE_VELOCITY: 0.5,
+            GLIDE_DECELERATION: 0.98,
+            MIN_GLIDE_VELOCITY: 0.03, // Minimum velocity to initiate a glide.
+
+            // Spring Drag animation
+            SPRING_FACTOR: 0.2, // How "stretchy" the drag is. Higher is less stretchy.
+            SPRING_STOP_THRESHOLD: 0.1, // How close to the target before stopping.
+
+            // Drag Collision (when dragging a node into another)
+            DRAG_COLLISION_ITERATIONS: 10,
+            DRAG_VELOCITY_TRANSFER: 0.01,
+            DRAG_COLLISION_SELF_DAMPENING: 0.1, // How much the dragged node slows down on collision (0-1).
+
+            // Glide Collision (when a gliding node hits another)
+            GLIDE_BOUNCE_DAMPENING: 0.5, // How much energy is lost on bounce.
+            GLIDE_NUDGE_FACTOR: 0.005, // How much the other node is pushed.
+            COLLISION_PADDING: 20, // Shared padding for all collisions
+        };
+    }
+
+    /**
+     * Stops all gliding animations currently active in the container.
+     * This is useful for immediately halting all node momentum, for example,
+     * before starting a new layout animation like "Optimize View".
+     */
+    stopAllGlides() {
+        const glidingNodes = this.nodesContainer.querySelectorAll('.is-gliding');
+        glidingNodes.forEach(node => {
+            if (node._glideAnimationId) {
+                cancelAnimationFrame(node._glideAnimationId);
+                delete node._glideAnimationId;
+            }
+            node.classList.remove('is-gliding');
+        });
     }
 
     // ... (moveNodeAndChildren and other methods remain the same for now)
@@ -24,7 +71,6 @@ export class NodeMovementManager {
      * @param {HTMLElement} node - The node to move.
      * @param {number} dx - Change in X coordinate.
      * @param {number} dy - Change in Y coordinate.
-     * @param {number} [depth=0] - The depth of the node in the current move operation, for damping.
      */
     moveNodeAndChildren(node, dx, dy) {
         const currentX = parseFloat(node.style.left);
@@ -65,11 +111,11 @@ export class NodeMovementManager {
      */
     _updateIncomingLine(node, dx, dy) {
         if (node.lineElement) {
-            let oldX2 = parseFloat(node.lineElement.getAttribute('x2')) || 0;
-            let oldY2 = parseFloat(node.lineElement.getAttribute('y2')) || 0;
+            let oldX2 = parseFloat(node.lineElement.getAttribute('x2'));
+            let oldY2 = parseFloat(node.lineElement.getAttribute('y2'));
 
-            node.lineElement.setAttribute('x2', oldX2 + dx);
-            node.lineElement.setAttribute('y2', oldY2 + dy);
+            node.lineElement.setAttribute('x2', (oldX2 || 0) + dx);
+            node.lineElement.setAttribute('y2', (oldY2 || 0) + dy);
         }
     }
 
@@ -139,8 +185,18 @@ export class NodeMovementManager {
         let velocityY = initialVelocityY;
         let lastTime = performance.now();
 
-        const decelerationRate = 0.95; // A higher value (closer to 1.0) decreases friction, making the glide longer and smoother.
-        const minVelocityThreshold = 0.01; // Stop gliding when velocity is below this
+        const currentVelocity = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+        if (currentVelocity > this.physics.MAX_GLIDE_VELOCITY) {
+            const scale = this.physics.MAX_GLIDE_VELOCITY / currentVelocity;
+            velocityX *= scale;
+            velocityY *= scale;
+        }
+        
+        node.classList.add('is-gliding');
+        
+        // Get all other visible nodes to check for collisions against.
+        // We do this once at the start of the glide for performance.
+        const collidableNodes = Array.from(this.nodesContainer.children).filter(n => n !== node && n.style.display !== 'none');
 
         const animateGlide = (currentTime) => {
             const deltaTime = currentTime - lastTime;
@@ -151,13 +207,29 @@ export class NodeMovementManager {
             const dy = velocityY * deltaTime;
 
             this.moveNodeAndChildren(node, dx, dy);
+            
+            // Check for and resolve collisions after moving.
+            const bounce = this._resolveGlideCollisions(node, collidableNodes);
 
             // Apply deceleration
-            velocityX *= decelerationRate;
-            velocityY *= decelerationRate;
+            velocityX *= this.physics.GLIDE_DECELERATION;
+            velocityY *= this.physics.GLIDE_DECELERATION;
 
             // Stop animation if velocity is too low
-            if (Math.abs(velocityX) < minVelocityThreshold && Math.abs(velocityY) < minVelocityThreshold) {
+            if (Math.abs(velocityX) < this.physics.MIN_GLIDE_VELOCITY && Math.abs(velocityY) < this.physics.MIN_GLIDE_VELOCITY) {
+                node.classList.remove('is-gliding');
+                return;
+            }
+
+            // If a bounce occurred, reverse and dampen velocity
+            if (bounce.bounced) {
+                velocityX = -velocityX * bounce.dampening;
+                velocityY = -velocityY * bounce.dampening;
+            }
+
+            // If velocity becomes negligible after a bounce, stop the animation.
+            if (Math.abs(velocityX) < this.physics.MIN_GLIDE_VELOCITY && Math.abs(velocityY) < this.physics.MIN_GLIDE_VELOCITY) {
+                node.classList.remove('is-gliding');
                 return;
             }
 
@@ -168,12 +240,100 @@ export class NodeMovementManager {
     }
 
     /**
-     * Starts a spring-based drag animation for a node.
-     * @param {HTMLElement} node The node to be dragged.
-     * @param {number} startX The initial X coordinate of the drag target (cursor).
-     * @param {number} startY The initial Y coordinate of the drag target (cursor).
+     * Resolves collisions for a single gliding node.
+     * @param {HTMLElement} glidingNode - The node that is currently gliding.
+     * @param {Array<HTMLElement>} otherNodes - An array of other nodes to check against.
+     * @returns {{bounced: boolean, dampening: number}} - Info about the collision.
      */
-    startSpringDrag(node, startX, startY) {
+    _resolveGlideCollisions(glidingNode, otherNodes) {
+        let bounced = false;
+
+        const posA = { x: parseFloat(glidingNode.style.left), y: parseFloat(glidingNode.style.top) };
+
+        for (const nodeB of otherNodes) {
+            if (this._isAncestor(nodeB, glidingNode) || this._isAncestor(glidingNode, nodeB)) {
+                continue; // Prevent children from colliding with parents during glide
+            }
+
+            const posB = { x: parseFloat(nodeB.style.left), y: parseFloat(nodeB.style.top) };
+
+            const dx = posB.x - posA.x;
+            const dy = posB.y - posA.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            const requiredDistance = (glidingNode.offsetWidth / 2) + (nodeB.offsetWidth / 2) + this.physics.COLLISION_PADDING;
+
+            if (distance > 0 && distance < requiredDistance) {
+                bounced = true;
+                const overlap = requiredDistance - distance;
+                const pushX = (dx / distance) * overlap;
+                const pushY = (dy / distance) * overlap;
+
+                // Move the gliding node back out of the collision immediately
+                this.moveNodeAndChildren(glidingNode, -pushX, -pushY);
+
+                // Give the other node a small nudge
+                this.startGlide(nodeB, -pushX * this.physics.GLIDE_NUDGE_FACTOR, -pushY * this.physics.GLIDE_NUDGE_FACTOR);
+
+                break; // Resolve one collision per frame for simplicity
+            }
+        }
+        return { bounced, dampening: this.physics.GLIDE_BOUNCE_DAMPENING };
+    }
+
+    /**
+     * Animates a node to a new target position over a set duration.
+     * This is used for the "Optimize Layout" feature.
+     * @param {HTMLElement} node - The node to animate.
+     * @param {{ux: number, uy: number}} targetPos - The final destination coordinates.
+     * @param {number} [duration=500] - The duration of the animation in milliseconds.
+     */
+    animateToPosition(node, targetPos, duration = 500) {
+        const startX = parseFloat(node.style.left || 0);
+        const startY = parseFloat(node.style.top || 0);
+        const totalDx = targetPos.ux - startX;
+        const totalDy = targetPos.uy - startY;
+
+        let startTime = null;
+
+        // Easing function (ease-in-out)
+        const easeInOutQuad = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+        const animationFrame = (currentTime) => {
+            if (startTime === null) {
+                startTime = currentTime;
+            }
+
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+            const easedProgress = easeInOutQuad(progress);
+
+            // Calculate the required incremental move for this frame
+            const currentX = parseFloat(node.style.left || 0);
+            const currentY = parseFloat(node.style.top || 0);
+            const nextX = startX + totalDx * easedProgress;
+            const nextY = startY + totalDy * easedProgress;
+            const dx = nextX - currentX;
+            const dy = nextY - currentY;
+
+            this.moveNodeAndChildren(node, dx, dy);
+
+            if (progress < 1) {
+                requestAnimationFrame(animationFrame);
+            }
+        };
+
+        requestAnimationFrame(animationFrame);
+    }
+
+    /**
+     * Starts a spring-based drag animation for a node.
+     * @param {HTMLElement} node - The node to be dragged.
+     * @param {number} startX - The initial X coordinate of the drag target (cursor).
+     * @param {number} startY - The initial Y coordinate of the drag target (cursor).
+     * @param {Array<HTMLElement>} collidableNodes - Other nodes to check for collisions.
+     */
+    startSpringDrag(node, startX, startY, collidableNodes) {
         if (this.springAnimationId) {
             cancelAnimationFrame(this.springAnimationId);
         }
@@ -203,10 +363,9 @@ export class NodeMovementManager {
         this.springTargetY = startY;
         this.springGrabOffsetX = startX - currentX;
         this.springGrabOffsetY = startY - currentY;
-
-        const springFactor = 0.2; // How "stretchy" the drag is. Higher is less stretchy.
-        const childDamping = 0.1; // How much children lag behind. Lower is more lag.
-        const stopThreshold = 0.1; // How close to the target before stopping.
+        this.collidableNodes = collidableNodes.filter(n => n !== node && n.style.display !== 'none');
+        this.currentVelocityX = 0;
+        this.currentVelocityY = 0;
 
         const animateSpring = () => {
             if (!this.isSpringDragging || !this.springTargetNode) {
@@ -219,6 +378,7 @@ export class NodeMovementManager {
                     }
                 };
                 cleanup(this.springTargetNode);
+                this.collidableNodes = [];
                 return;
             }
 
@@ -230,13 +390,19 @@ export class NodeMovementManager {
             const targetX = this.springTargetX - this.springGrabOffsetX;
             const targetY = this.springTargetY - this.springGrabOffsetY;
 
-            const dx = (targetX - n._spring.currentX) * springFactor;
-            const dy = (targetY - n._spring.currentY) * springFactor;
+            const dx = (targetX - n._spring.currentX) * this.physics.SPRING_FACTOR;
+            const dy = (targetY - n._spring.currentY) * this.physics.SPRING_FACTOR;
 
-            if (Math.abs(dx) > stopThreshold || Math.abs(dy) > stopThreshold) {
+            this.currentVelocityX = dx;
+            this.currentVelocityY = dy;
+
+            if (Math.abs(dx) > this.physics.SPRING_STOP_THRESHOLD || Math.abs(dy) > this.physics.SPRING_STOP_THRESHOLD) {
                 this.moveNodeAndChildren(n, dx, dy);
                 n._spring.currentX += dx;
                 n._spring.currentY += dy;
+
+                // Resolve collisions after moving the dragged node
+                this.resolveDragCollisions(n, this.collidableNodes);
             }
 
             this.springAnimationId = requestAnimationFrame(animateSpring);
@@ -250,7 +416,7 @@ export class NodeMovementManager {
      * @param {number} targetY The new target Y coordinate (from cursor).
      */
     updateSpringDragTarget(targetX, targetY) {
-        if (this.isSpringDragging) {
+        if (this.isSpringDragging && this.springTargetNode) {
             this.springTargetX = targetX;
             this.springTargetY = targetY;
         }
@@ -260,26 +426,75 @@ export class NodeMovementManager {
      * Stops the spring-based drag animation.
      */
     stopSpringDrag() {
-        if (this.isSpringDragging) {
-            // Snap to final position to ensure clean integer coordinates
-            if (this.springTargetNode) {
-                const finalTargetX = this.springTargetX - this.springGrabOffsetX;
-                const finalTargetY = this.springTargetY - this.springGrabOffsetY;
-    
-                const currentX = parseFloat(this.springTargetNode.style.left);
-                const currentY = parseFloat(this.springTargetNode.style.top);
-    
-                const dx = finalTargetX - currentX;
-                const dy = finalTargetY - currentY;
-    
-                if (dx !== 0 || dy !== 0) {
-                    this.moveNodeAndChildren(this.springTargetNode, dx, dy);
-                }
-            }
-        }
         this.isSpringDragging = false;
         this.springGrabOffsetX = 0;
         this.springGrabOffsetY = 0;
         this.springTargetNode = null;
+        this.currentVelocityX = 0;
+        this.currentVelocityY = 0;
+        this.collidableNodes = [];
+    }
+
+    /**
+     * Resolves collisions between the dragged node and other nodes during dragging.
+     * @param {HTMLElement} draggedNode - The node being actively dragged.
+     * @param {Array<HTMLElement>} otherNodes - An array of other nodes to check against.
+     */
+    resolveDragCollisions(draggedNode, otherNodes) {
+        const allNodes = [draggedNode, ...otherNodes];
+        const PADDING = this.physics.COLLISION_PADDING;
+
+        for (let i = 0; i < this.physics.DRAG_COLLISION_ITERATIONS; i++) {
+            for (let j = 0; j < allNodes.length; j++) {
+                for (let k = j + 1; k < allNodes.length; k++) {
+                    const nodeA = allNodes[j];
+                    const nodeB = allNodes[k];
+
+                    // Use the more accurate _spring position for the dragged node
+                    const posA = (nodeA === draggedNode) ? { x: nodeA._spring.currentX, y: nodeA._spring.currentY } : { x: parseFloat(nodeA.style.left), y: parseFloat(nodeA.style.top) };
+                    const posB = { x: parseFloat(nodeB.style.left), y: parseFloat(nodeB.style.top) };
+
+                    const dx = posB.x - posA.x;
+                    const dy = posB.y - posA.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    const requiredDistance = (nodeA.offsetWidth / 2) + (nodeB.offsetWidth / 2) + PADDING;
+
+                    if (distance > 0 && distance < requiredDistance) {
+                        const overlap = (requiredDistance - distance) / 2;
+                        const pushX = (dx / distance) * overlap;
+                        const pushY = (dy / distance) * overlap;
+
+                        // If nodeA is the one being dragged, only push nodeB.
+                        // Otherwise, push both nodes away from each other.
+                        if (nodeA === draggedNode) {
+                            // If the collided node is not a child of the dragged node, push it and give it a slight nudge.
+                            if (!this._isAncestor(draggedNode, nodeB)) {
+                                this.moveNodeAndChildren(nodeB, pushX, pushY); // Resolve the overlap immediately.
+                                // Start a small glide on the collided node based on the push force.
+                                this.startGlide(nodeB, pushX * this.physics.DRAG_VELOCITY_TRANSFER, pushY * this.physics.DRAG_VELOCITY_TRANSFER);
+                                // Dampen the dragged node's own velocity using the new, separate parameter.
+                                this.currentVelocityX *= 1 - this.physics.DRAG_COLLISION_SELF_DAMPENING;
+                                this.currentVelocityY *= 1 - this.physics.DRAG_COLLISION_SELF_DAMPENING;
+                            }
+                        } else {
+                            // This case is for when two non-dragged nodes collide during layout optimization, not during drag.
+                            if (!this._isAncestor(nodeB, nodeA)) {
+                                this.moveNodeAndChildren(nodeB, pushX, pushY);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    _isAncestor(potentialAncestor, node) {
+        let currentNode = node._parent;
+        while (currentNode) {
+            if (currentNode === potentialAncestor) return true;
+            currentNode = currentNode._parent;
+        }
+        return false;
     }
 }

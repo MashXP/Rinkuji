@@ -6,14 +6,16 @@ export class ContextMenuHandler {
      * @param {function(HTMLElement): void} expandNodeCallback - Callback to expand a node.
      * @param {function(HTMLElement, 'all'|'kanji'|'start-kanji', string|null): void} filterNodeContentCallback - Callback to filter node content.
      * @param {function(HTMLElement): void} rerandomizeNodeCallback - Callback to rerandomize child nodes.
+     * @param {function(HTMLElement): void} optimizeNodeCallback - Callback to optimize child nodes.
      */
-    constructor(nodeContextMenu, kanjiRegex, collapseNodeCallback, expandNodeCallback, filterNodeContentCallback, rerandomizeNodeCallback) {
+    constructor(nodeContextMenu, kanjiRegex, collapseNodeCallback, expandNodeCallback, filterNodeContentCallback, rerandomizeNodeCallback, optimizeNodeCallback) {
         this.nodeContextMenu = nodeContextMenu;
         this.kanjiRegex = kanjiRegex;
         this.collapseNodeCallback = collapseNodeCallback;
         this.expandNodeCallback = expandNodeCallback;
         this.filterNodeContentCallback = filterNodeContentCallback;
         this.rerandomizeNodeCallback = rerandomizeNodeCallback;
+        this.optimizeNodeCallback = optimizeNodeCallback;
 
         this.activeContextMenuNode = null; // The node that the context menu is currently open for
         this.activeContextMenuKanji = null; // The specific kanji span that was right-clicked
@@ -93,6 +95,14 @@ export class ContextMenuHandler {
                 randomizeBtn.style.display = 'none';
                 delete randomizeBtn._targetKanji; // Clean up
             }
+
+            // --- Update "Optimize" option visibility ---
+            const optimizeBtn = this.nodeContextMenu.querySelector('[data-action="optimize"]');
+            if (this.activeContextMenuNode) {
+                optimizeBtn.style.display = 'block';
+            } else {
+                optimizeBtn.style.display = 'none';
+            }
         }
     }
 
@@ -145,6 +155,9 @@ export class ContextMenuHandler {
                 if (targetKanji) {
                     this.rerandomizeNodeCallback(targetKanji); // This now calls the method on the instance at click time
                 }
+                break;
+            case 'optimize':
+                this.optimizeNodeCallback(this.activeContextMenuNode);
                 break;
         }
         this.hideContextMenu(); // Hide menu after action
