@@ -29,6 +29,8 @@ To run the backend tests, ensure you are in the project root directory and use t
 1.  **Install dependencies:**
     ```bash
     pip install -r backend/requirements.txt
+    cd ./frontend && npm install --save-dev jest
+
     ```
 2.  **Run tests:**
     *   **Run all tests:**
