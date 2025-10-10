@@ -1,7 +1,13 @@
 import requests
+import re
 
 class JishoService:
     JISHO_API_URL = "https://jisho.org/api/v1/search/words"
+
+    @staticmethod
+    def is_japanese(text: str) -> bool:
+        # This regex checks for Hiragana, Katakana, and Kanji characters.
+        return bool(re.search(r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]', text))
 
     def search_words(self, query):
         if not query:
@@ -12,7 +18,17 @@ class JishoService:
         try:
             response = requests.get(api_url)
             response.raise_for_status()
-            return response.json(), 200
+            data = response.json()
+            
+            # Filter out results that are not Japanese
+            if 'data' in data:
+                filtered_data = [
+                    item for item in data['data'] 
+                    if 'slug' in item and self.is_japanese(item['slug'])
+                ]
+                data['data'] = filtered_data
+
+            return data, 200
         except requests.exceptions.RequestException as e:
             print(f"Error fetching from Jisho API: {e}")
             return {"error": "Failed to fetch data from the external API."}, 502
@@ -31,11 +47,12 @@ class JishoService:
             processed_results = {}
             for result in data.get("data", []):
                 slug = result.get("slug")
-                base_slug = slug.split('-')[0]
+                if slug and self.is_japanese(slug):
+                    base_slug = slug.split('-')[0]
 
-                if base_slug not in processed_results:
-                    processed_results[base_slug] = []
-                processed_results[base_slug].append(result)
+                    if base_slug not in processed_results:
+                        processed_results[base_slug] = []
+                    processed_results[base_slug].append(result)
 
             final_results = []
             for base_slug, results in processed_results.items():

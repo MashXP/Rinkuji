@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.6] - 2025-10-10
+#### Fixed
+- **Data Integrity**: Implemented backend filtering for Jisho API results to prevent non-Japanese or irrelevant "gibberish" entries from being processed and displayed as nodes in the graph. This ensures that only valid Japanese words and kanji are shown.
+
 ## [1.0.5] - 2025-09-26
 #### Added
 - **Enhanced Node Movement & Graph Optimization**: Implemented smooth, physics-based node movement animations and a new feature to automatically optimize node arrangements for children of a selected node, accessible via right-click. This significantly improves graph readability and user interaction.
