@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    { "source": "/api/suggestions",  "destination": "/api/suggestions.py" },
+    { "source": "/api/graph",        "destination": "/api/graph.py" },
+    { "source": "/api/changelog",    "destination": "/api/changelog.py" },
+    { "source": "/search_words",     "destination": "/api/search_words.py" },
+    { "source": "/search_by_kanji",  "destination": "/api/search_by_kanji.py" },
+    { "source": "/graph",            "destination": "/api/graph.py" },
+    { "source": "/kanji_details",    "destination": "/api/kanji_details.py" },
+    { "source": "/about",            "destination": "/about.html" }
+  ]
+}

@@ -1,3 +1,5 @@
+import { VERCEL_URL } from './api-config.js';
+
 function setChangelogError(container) {
     container.innerHTML = '<p>Could not load changelog.</p>';
 }
@@ -6,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const changelogContainer = document.getElementById('changelog-container');
 
     if (changelogContainer) {
-        fetch('/api/changelog')
+        fetch(`${VERCEL_URL}/api/changelog`)
             .then(response => response.json())
             .then(data => {
                 if (data.changelog) {

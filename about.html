@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Rinkuji</title>
+    <link rel="icon" href="frontend/src/assets/rinku_icon_logo.ico">
+    <link rel="stylesheet" href="frontend/src/css/base.css">
+    <link rel="stylesheet" href="frontend/src/css/about.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body class="about-page-body">
+    <a href="./" class="back-button" title="Back to Home"><i class="fas fa-home"></i></a>
+
+    <main class="container">
+        <img src="frontend/src/assets/rinku_full_logo.svg" alt="Rinkuji Logo" class="about-page-logo">
+
+        <section class="about-section">
+            <p>
+                <b>Rinkuji (リンク字)</b> is a web application designed to help you explore the intricate connections between Japanese words and the kanji they contain. By inputting a word, you can generate a dynamic, interactive graph that visually maps out the relationships between kanji, their components, and other related words.
+            </p>
+            <p>
+                Our goal is to provide a unique and intuitive learning tool for students of the Japanese language, making the process of understanding kanji and vocabulary more engaging and memorable.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>How to Use</h2>
+            <ol>
+                <li><strong>Start a Search:</strong> Upon visiting the homepage, if no word is specified, the "New Search" modal will appear automatically. Otherwise, click the "New Search" button in the top bar.</li>
+                <li><strong>Enter a Word:</strong> Type a Japanese word (in kanji or kana) or an English word into the search bar within the modal.</li>
+                <li><strong>Generate Graph:</strong> Press Enter or click the "Search" button. The graph will automatically generate, displaying connections between kanji, components, and related words.</li>
+                <li><strong>Explore &amp; Interact:</strong> Click on individual kanji nodes to expand them. Pan and zoom the canvas to navigate. Right-click on nodes for more options, such as filtering content or collapsing branches.</li>
+            </ol>
+        </section>
+
+        <section class="about-section">
+            <h2>Unique Features</h2>
+            <ul>
+                <li>**Interactive Kanji Relationship Graph**: Generates a dynamic, interactive graph visualizing connections between Japanese words, kanji, their components, and related words.</li>
+                <li>**Flexible Search**: Allows searching for Japanese words (kanji or kana) or English words.</li>
+                <li>**Node Interaction**: Users can click on individual kanji nodes to expand them, pan and zoom the canvas, and right-click for advanced options like filtering content or collapsing branches.</li>
+                <li>**Color Customization**: Users can customize background, highlight, and text colors via presets or custom pickers within the Options menu.</li>
+                <li>**Rerandomize Functionality**: Provides the ability to rerandomize content via the context menu.</li>
+            </ul>
+        </section>
+
+        <section class="about-section">
+            <h2>Data Source and Attribution</h2>
+            <p>
+                All dictionary and kanji data presented in Rinkuji is sourced directly from the <a href="https://jisho.org/" target="_blank" rel="noopener noreferrer">Jisho.org</a> API. Jisho.org is a powerful Japanese-English dictionary that aggregates data from several projects. We are incredibly grateful to the Jisho.org team and the creators of these underlying data sources for making this information publicly available.
+            </p>
+            <p>
+                Specifically, Jisho.org utilizes data from the following open-source projects:
+                <ul>
+                    <li><a href="http://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener noreferrer">JMdict</a>: A comprehensive general dictionary, property of the Electronic Dictionary Research and Development Group (EDRDG), used under their license.</li>
+                    <li><a href="http://www.edrdg.org/wiki/index.php/KANJIDIC_Project" target="_blank" rel="noopener noreferrer">Kanjidic2</a>: A kanji database including readings, meanings, and metadata, also property of EDRDG and used under their license.</li>
+                    <li><a href="https://tatoeba.org/" target="_blank" rel="noopener noreferrer">Tatoeba Project</a>: Provides most example sentences, licensed under Creative Commons CC-BY.</li>
+                    <li><a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener noreferrer">KanjiVG</a>: Provides stroke order data for kanji, copyright © 2009-2012 Ulrich Apel and released under the Creative Commons Attribution-Share Alike 3.0 license.</li>
+                    <li><a href="https://www.edrdg.org/jmdict/j_jmdict.html" target="_blank" rel="noopener noreferrer">JMnedict</a>: A database of Japanese proper names, property of EDRDG and used under their license.</li>
+                    <li><a href="https://www.edrdg.org/wiki/index.php/RADKFILE_Project" target="_blank" rel="noopener noreferrer">RADKFILE</a>: A database of kanji radicals, property of EDRDG and used under their license.</li>
+                    <li><a href="https://jreibun.com/" target="_blank" rel="noopener noreferrer">Jreibun Project</a>: Provides high-quality example sentences.</li>
+                    <li><a href="https://dbpedia.org/" target="_blank" rel="noopener noreferrer">DBpedia</a>: Provides Wikipedia articles, dual licensed under Creative Commons Attribution-ShareAlike 3.0 and GNU Free Documentation License.</li>
+                    <li><a href="https://www.jlpt.jp/e/" target="_blank" rel="noopener noreferrer">Jonathan Waller's JLPT Resources page</a>: Provides JLPT level information.</li>
+                    <li><a href="https://www.wanikani.com/" target="_blank" rel="noopener noreferrer">WaniKani audio</a>: Provides audio files.</li>
+                </ul>
+            </p>
+        </section>
+
+        <section class="about-section" id="changelog-section">
+            <h2>Changelog</h2>
+            <div id="changelog-container">
+                <p>Loading changelog...</p>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <h2>Acknowledgements</h2>
+            <p>
+                This project is an unofficial continuation of the original <a href="https://www.tofugu.com/japanese-learning-resources-database/suiren-io/" target="_blank" rel="noopener noreferrer">Suiren.io</a>. Special thanks to Oni Sensei for your invaluable guidance and inspiration.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>Deployment</h2>
+            <p>
+                Rinkuji is deployed on <a href="https://vercel.com/" target="_blank" rel="noopener noreferrer">Vercel</a>, a serverless platform providing fast, globally distributed hosting with zero cold-start delays.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>Source Code</h2>
+            <p>
+                The source code for Rinkuji is available on <a href="https://github.com/MashXP/Rinkuji" target="_blank" rel="noopener noreferrer">GitHub</a>. Contributions and feedback are welcome!
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>Terms and Conditions</h2>
+            <p>
+                By using Rinkuji ("the Service"), you are agreeing to be bound by the following terms and conditions ("Terms of Service").
+            </p>
+            <p>
+                The Service is provided on an "as is" and "as available" basis. Rinkuji acts as a client for the Jisho.org API. We do not host or own the dictionary data. As such, we do not warrant the accuracy, completeness, or availability of the data returned by the API. The data is provided for educational and informational purposes only, and you should use it at your own discretion.
+            </p>
+            <p>
+                We are not responsible for any issues, downtime, or changes related to the Jisho.org API. You agree not to use this Service for any illegal or unauthorized purpose. You also agree not to reproduce, duplicate, copy, sell, or exploit any portion of the Rinkuji application's unique interface or functionality without express written permission from us.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>Privacy Policy</h2>
+            <p>
+                We do not collect any personally identifiable information from our users. Your search queries are processed to provide the service but are not stored or linked to you. We may use anonymous usage data to improve the application.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h2>License</h2>
+            <p>
+                Rinkuji is free software licensed under the <a href="https://github.com/MashXP/Rinkuji/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GNU AGPLv3 License</a>.
+            </p>
+        </section>
+
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="frontend/src/js/about.js"></script>
+</body>
+</html>

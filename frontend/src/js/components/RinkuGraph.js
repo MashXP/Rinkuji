@@ -13,6 +13,7 @@ import { MeaningDisplayManager } from '../managers/MeaningDisplayManager.js';
 import { GraphExpansionManager } from '../managers/GraphExpansionManager.js';
 import { GraphLayoutManager } from '../managers/GraphLayoutManager.js';
 import { GraphViewManager } from '../managers/GraphViewManager.js';
+import { VERCEL_URL } from '../api-config.js';
 
 // Class to manage the Rinku Graph functionality (expansion, nodes, sidebar)
 export class RinkuGraph extends CanvasComponent {
@@ -191,7 +192,7 @@ export class RinkuGraph extends CanvasComponent {
 
     async fetchRelatedWords(kanjiChar) {
         try {
-            const response = await fetch(`/search_by_kanji?kanji=${encodeURIComponent(kanjiChar)}`);
+            const response = await fetch(`${VERCEL_URL}/search_by_kanji?kanji=${encodeURIComponent(kanjiChar)}`);
             if (!response.ok) {
                 throw new Error(`API error for ${kanjiChar}: ${response.status}`);
             }

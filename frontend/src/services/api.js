@@ -1,4 +1,8 @@
 // This service will communicate with the backend API.
+import { VERCEL_URL } from '../js/api-config.js';
+
+// Prefix all API calls with the Vercel URL when set, otherwise use relative paths.
+const BASE = VERCEL_URL;
 
 // Function to fetch suggestions from our backend (which queries data.json)
 export async function getLocalSuggestions(query) {
@@ -6,7 +10,7 @@ export async function getLocalSuggestions(query) {
         return [];
     }
     try {
-        const response = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`${BASE}/api/suggestions?q=${encodeURIComponent(query)}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -23,7 +27,7 @@ export async function searchJishoWords(query) {
         return [];
     }
     try {
-        const response = await fetch(`/search_words?query=${encodeURIComponent(query.toLowerCase())}`);
+        const response = await fetch(`${BASE}/search_words?query=${encodeURIComponent(query.toLowerCase())}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -45,7 +49,7 @@ export async function searchJishoKanji(query) {
         return [];
     }
     try {
-        const response = await fetch(`/search_by_kanji?kanji=${encodeURIComponent(query.toLowerCase())}`);
+        const response = await fetch(`${BASE}/search_by_kanji?kanji=${encodeURIComponent(query.toLowerCase())}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -91,7 +95,7 @@ export async function getGraphData(word) {
         return null;
     }
     try {
-        const response = await fetch(`/api/graph?word=${encodeURIComponent(word)}`);
+        const response = await fetch(`${BASE}/api/graph?word=${encodeURIComponent(word)}`);
         if (!response.ok) {
             // If the word is not found, the server should return a 404.
             if (response.status === 404) {
@@ -112,7 +116,7 @@ export async function searchWord(wordSlug) {
         return null;
     }
     try {
-        const response = await fetch(`/search_words?query=${encodeURIComponent(wordSlug)}`);
+        const response = await fetch(`${BASE}/search_words?query=${encodeURIComponent(wordSlug)}`);
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
         }

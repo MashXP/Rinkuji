@@ -4,6 +4,7 @@ import { OptionsMenu } from './components/OptionsMenu.js';
 import { NewSearchModal } from './components/NewSearchModal.js';
 import { UITogglingManager } from './managers/UITogglingManager.js';
 import { initializeResponsiveLayout } from './utils/responsive.js';
+import { VERCEL_URL } from './api-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeResponsiveLayout();
@@ -51,8 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
         panZoom = new PanZoom(viewport, canvas, zoomInBtn, zoomOutBtn, resetViewBtn, zoomMeter);
     }
 
+    // Read the word from the URL (?word=...) and inject into the DOM element
+    // that RinkuGraph / GraphInitializer reads via dataset.word.
+    const urlParams = new URLSearchParams(window.location.search);
+    const wordParam = urlParams.get('word');
+    if (wordParam && wordContainer) {
+        wordContainer.dataset.word = wordParam;
+    }
+
     // Instantiate RinkuGraph, passing PanZoom instance
-    if (panZoom && wordContainer && svgLayer && nodesContainer && parentKanjiSidebar && parentKanjiSearchInput && parentKanjiListContainer) {
+    if (panZoom && wordContainer && svgLayer && nodesContainer && parentKanjiSidebar && parentKanjiSearchInput && parentKanjiListContainer && wordContainer.dataset.word) {
         new RinkuGraph(
             viewport,
             canvas,
@@ -116,16 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
         searchModal = new NewSearchModal(newSearchModal, newSearchBtn, newSearchModalCloseBtn, newSearchInput, suggestionsList, jishoLoadingIndicator);
     }
 
-    // Check if the initial word is empty and show the search modal
-    const urlParams = new URLSearchParams(window.location.search);
-    const wordParam = urlParams.get('word');
-
     if (!wordParam && searchModal) {
         searchModal.show();
     }
 
     // Fetch and display latest version
-    fetch('/api/changelog')
+    fetch(`${VERCEL_URL}/api/changelog`)
         .then(response => response.json())
         .then(data => {
             if (data.changelog && rinkuVersionDisplay) {
