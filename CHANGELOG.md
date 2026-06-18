@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0] - 2026-06-18
+#### Added
+- **Vercel Migration**: Migrated backend to Vercel Serverless Functions for faster response times and no cold starts.
+- **GitHub Pages Hosting**: Migrated frontend to GitHub Pages for reliable static hosting.
+- **Dynamic API Configuration**: Added `api-config.js` to easily switch between local development and production API endpoints.
+#### Fixed
+- **Subdirectory Hosting**: Fixed absolute paths to relative paths for compatibility with GitHub Pages subdirectory hosting (`/Rinkuji/`).
+- **Visual Bug**: Removed stray characters causing a white strip on the right side of the page.
+- **Optimize Menu**: Added missing "Optimize" option to the context menu in the root `index.html`.
+
 ## [1.0.6] - 2025-10-10
 #### Fixed
 - **Data Integrity**: Implemented backend filtering for Jisho API results to prevent non-Japanese or irrelevant "gibberish" entries from being processed and displayed as nodes in the graph. This ensures that only valid Japanese words and kanji are shown.

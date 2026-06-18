@@ -49,7 +49,12 @@ Specifically, Jisho.org utilizes data from the following open-source projects:
 
 ## Deployment
 
-Rinkuji is deployed on [Render.com](https://render.com/), a cloud platform that provides a simple way to host web applications. The backend is a Flask application, and the frontend is a static web application.
+Rinkuji is deployed using a decoupled architecture:
+*   **Frontend**: Hosted on [GitHub Pages](https://mashxp.github.io/Rinkuji/), providing fast and reliable static delivery.
+*   **Backend**: Hosted on [Vercel](https://vercel.com/) as Serverless Functions, ensuring zero cold-start delays and scalable API performance.
+
+To redeploy the backend: `vercel --prod`
+To update the frontend: Push changes to the `main` branch on GitHub.
 
 ## License
 

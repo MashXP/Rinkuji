@@ -1,90 +1,78 @@
 ## Development
 
-### Running Tests
+### Prerequisites
+* **Node.js** (v18+)
+* **npm**
+* **micromamba** (or conda/uv)
+* **Vercel CLI** (`npm install -g vercel`)
 
-#### Frontend Tests
+### Local Environment Setup
 
-1.  **Navigate to the frontend directory:**
-    ```bash
-    cd frontend
-    ```
-2.  **Install dependencies (if not already installed):**
-    ```bash
-    npm install
-    ```
-3.  **Run tests:**
-    *   **Run all tests:**
-        ```bash
-        npm test
-        ```
-    *   **Run tests with coverage:**
-        ```bash
-        npm test -- --coverage
-        ```
+1. **Backend Environment**:
+   ```bash
+   micromamba env create -f env.yml
+   micromamba activate rinkuji
+   ```
 
-#### Backend Tests
-
-To run the backend tests, ensure you are in the project root directory and use the following commands:
-
-1.  **Install dependencies:**
-    ```bash
-    pip install -r backend/requirements.txt
-    cd ./frontend && npm install --save-dev jest
-
-    ```
-2.  **Run tests:**
-    *   **Run all tests:**
-        ```bash
-        cd backend && pytest
-        ```
-    *   **Run tests with coverage:**
-        ```bash
-        cd backend && pytest --cov=src
-        ```
+2. **Frontend Configuration**:
+   Ensure `frontend/src/js/api-config.js` is set to local mode:
+   ```javascript
+   export const VERCEL_URL = '';
+   ```
 
 ### Running the Application Locally
 
-To run the application locally, follow these steps:
+#### 1. Full Stack (Flask Backend + Static Frontend)
+This mimics the original development workflow. Flask serves both the API and the static files.
+```bash
+export FLASK_APP=backend/app.py
+flask run --debug
+```
+Access at `http://127.0.0.1:5000`.
 
-1.  **Navigate to the backend directory:**
-    ```bash
-    cd backend
-    ```
-2.  **Install dependencies (if not already installed):**
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Run the Flask application:**
-    ```bash
-    export FLASK_APP=backend/app.py && flask run --debug
+#### 2. Static Frontend Only (connecting to Production Vercel)
+Useful for testing frontend-only changes without a local Python environment.
+```bash
+# Update api-config.js with your production Vercel URL
+# export const VERCEL_URL = 'https://your-app.vercel.app';
 
-#### Accessing Locally Hosted App from Mobile Devices
+python3 -m http.server 8000
+```
+Access at `http://localhost:8000`.
 
-To test the locally hosted application on a mobile device (or another device on the same network), follow these steps:
+### Running Tests
 
-1.  **Find your PC's IP address:**
-    On Linux, open a terminal and run `ip a` or `ifconfig`. Look for the IP address associated with your local network interface (e.g., `wlan0` for Wi-Fi, `eth0` for Ethernet). It will typically be in the `192.168.x.x` or `10.0.x.x` range.
+#### Frontend Tests (Jest)
+```bash
+cd frontend
+npm test
+```
 
-2.  **Configure Flask to listen on all public IPs:**
-    By default, `flask run` only listens on `127.0.0.1` (localhost), which is not accessible from other devices. You need to tell Flask to listen on `0.0.0.0`.
-    From the project root, modify the command to run Flask:
-    ```bash
-    export FLASK_APP=backend/app.py && flask run --debug --host=0.0.0.0
-    ```
+#### Backend Tests (Pytest)
+```bash
+cd backend
+pytest
+```
 
-3.  **Ensure firewall allows connections (if applicable):**
-    If you have a firewall running on your PC, it might block incoming connections to Flask's default port (5000). You may need to temporarily disable it or add a rule to allow connections on port 5000.
-    *   **For `ufw` (common on Ubuntu/Debian):**
-        ```bash
-        sudo ufw allow 5000
-        ```
-    *   **For `firewalld` (common on Fedora/RHEL):**
-        ```bash
-        sudo firewall-cmd --add-port=5000/tcp --permanent
-        sudo firewall-cmd --reload
-        ```
+### Deployment
 
-4.  **Access from your mobile device:**
-    On your mobile device, open a web browser and navigate to `http://<YOUR_PC_IP_ADDRESS>:5000`. Replace `<YOUR_PC_IP_ADDRESS>` with the actual IP address you found in step 1.
+#### Deploy Backend to Vercel
+```bash
+# First time setup
+vercel
 
-**Important Security Note**: Listening on `0.0.0.0` makes your development server accessible to *any* device on your local network. Do not do this on untrusted networks or for production deployments.
+# Subsequent production updates
+vercel --prod
+```
+
+#### Deploy Frontend to GitHub Pages
+Changes pushed to the `main` branch are automatically deployed via GitHub Actions/Pages. Ensure `index.html` uses relative paths for all assets.
+
+### Accessing Locally Hosted App from Mobile Devices
+
+To test on a mobile device, run Flask listening on all interfaces:
+```bash
+export FLASK_APP=backend/app.py
+flask run --debug --host=0.0.0.0
+```
+Access via `http://<YOUR_PC_IP_ADDRESS>:5000`.
